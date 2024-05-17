@@ -1,0 +1,398 @@
+### Library ####
+
+library(SummarizedExperiment)
+library(jaffelab)
+library(recount)
+library(sva)
+library(edgeR)
+library(dplyr)
+library(readr)
+library(org.Hs.eg.db)
+library(clusterProfiler)
+library(purrr)
+library(here)
+library(enrichplot)
+library(ggnewscale)
+library(sessioninfo)
+library("KEGGREST")
+library(vctrs)
+library(tibble)
+library(stringr)
+
+### Loading data and preparing lithium df  #####
+
+
+load(here("data", "zandiHypde_bipolar_rseGene_n511.rda"))
+load(here("data","zandiHypde_bipolar_rseExon_n511.rda"))
+load(here("data","zandiHypde_bipolar_rseJxn_n511.rda"))
+load(here("data","zandiHypde_bipolar_rseTx_n511.rda"))
+load(here("data","degradation_rse_BipSeq_BothRegions.rda")) #load cov_rse
+
+
+identical(colnames(rse_gene), colnames(cov_rse)) # TRUE
+rse_gene$Dx = factor(ifelse(rse_gene$PrimaryDx == "Control", "Control","Bipolar"), 
+                     levels = c("Control", "Bipolar"))
+
+##### add ancestry  ####
+load(here("data","zandiHyde_bipolar_MDS_n511.rda")) # load mds
+
+
+mds = mds[rse_gene$BrNum,1:5]
+colnames(mds) = paste0("snpPC", 1:5)
+colData(rse_gene) = cbind(colData(rse_gene), mds)
+
+
+#### Lithium exposure info ####
+
+
+drug_info = read.delim(here("lithium","drug_info.csv"),as.is=TRUE , sep = ",")
+
+
+rse_gene$lithium = drug_info$lithium[match(rse_gene$BrNum, drug_info$BrNum)]
+rse_gene$lifetime_lithium = drug_info$life_lithium[match(rse_gene$BrNum, drug_info$BrNum)]
+rse_gene$lithium_group = NA
+rse_gene$lithium_group[which(rse_gene$lithium==1)] =1 
+rse_gene$lithium_group[which(rse_gene$lithium==0 & rse_gene$lifetime_lithium==0)] =0
+
+table(rse_gene$lithium_group , rse_gene$BrainRegion)
+
+# Amygdala sACC
+# 0       25   27
+# 1        9   10
+
+
+### Filtering, whole data step1 ####
+
+##### Gene ######
+assays(rse_gene)$rpkm = recount::getRPKM(rse_gene, 'Length')
+geneIndex = rowMeans(assays(rse_gene)$rpkm) > 0.25  ## both regions
+rse_gene = rse_gene[geneIndex,]
+
+#####  Exon #####
+
+assays(rse_exon)$rpkm = recount::getRPKM(rse_exon, 'Length')
+exonIndex = rowMeans(assays(rse_exon)$rpkm) > 0.3
+rse_exon = rse_exon[exonIndex,]
+
+
+#### Junction #####
+
+rowRanges(rse_jxn)$Length <- 100
+assays(rse_jxn)$rp10m = recount::getRPKM(rse_jxn, 'Length')
+
+jxnIndex = rowMeans(assays(rse_jxn)$rp10m) > 0.35 & rowData(rse_jxn)$Class != "Novel"
+rse_jxn = rse_jxn[jxnIndex,]
+
+
+#### Transcript ####
+txIndex = rowMeans(assays(rse_tx)$tpm) > 0.4 
+rse_tx = rse_tx[txIndex,]
+
+
+
+### Get qSVs and create model whole samples,  step2 ####  
+
+
+#### qSVs #####
+
+modJoint = model.matrix(~Dx*BrainRegion + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
+                          mitoRate + rRNA_rate + totalAssignedGene + RIN +  abs(ERCCsumLogErr), 
+                        data=colData(rse_gene))
+
+
+degExprs = log2(assays(cov_rse)$count+1)
+k = num.sv(degExprs, modJoint) # 19
+qSV_mat = prcomp(t(degExprs))$x[,1:k]
+varExplQsva = getPcaVars(prcomp(t(degExprs)))
+varExplQsva[1:k]
+sum(varExplQsva[1:k]) # 87.976%
+
+####  model w/o interaction to subset by region and extracting qSVs ans samples related to Lithium exposures #### 
+
+modSep_lithium  = model.matrix(~lithium_group + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
+                                 mitoRate + rRNA_rate + totalAssignedGene + RIN + abs(ERCCsumLogErr), 
+                               data=colData(rse_gene)) 
+
+##### extract qSVs related to Lithium exposures #####
+
+qSV_mat_lithium = qSV_mat[rownames(modSep_lithium),]
+
+
+##### extract samples related to Lithium exposures #####
+
+rse_gene_lithium = rse_gene[,rownames(modSep_lithium)]
+rse_exon_lithium = rse_exon[,rownames(modSep_lithium)]
+rse_jxn_lithium = rse_jxn[,rownames(modSep_lithium)]
+rse_tx_lithium = rse_tx[,rownames(modSep_lithium)]
+
+### Filtering data only on lithiuim samples,  step3 ####
+
+##### Gene ######
+assays(rse_gene_lithium)$rpkm = recount::getRPKM(rse_gene_lithium, 'Length')
+geneIndex = rowMeans(assays(rse_gene_lithium)$rpkm) > 0.25  ## both regions
+rse_gene_lithium = rse_gene_lithium[geneIndex,]
+
+#####  Exon #####
+
+assays(rse_exon_lithium)$rpkm = recount::getRPKM(rse_exon_lithium, 'Length')
+exonIndex = rowMeans(assays(rse_exon_lithium)$rpkm) > 0.3
+rse_exon_lithium = rse_exon_lithium[exonIndex,]
+
+
+#### Junction #####
+
+rowRanges(rse_jxn_lithium)$Length <- 100
+assays(rse_jxn_lithium)$rp10m = recount::getRPKM(rse_jxn_lithium, 'Length')
+
+jxnIndex = rowMeans(assays(rse_jxn_lithium)$rp10m) > 0.35 & rowData(rse_jxn_lithium)$Class != "Novel"
+rse_jxn_lithium = rse_jxn_lithium[jxnIndex,]
+
+
+#### Transcript ####
+txIndex = rowMeans(assays(rse_tx_lithium)$tpm) > 0.4 
+rse_tx_lithium = rse_tx_lithium[txIndex,]
+
+
+
+### Differentially expressed feature analysis , step4 #####
+
+
+#### split back by region ####
+
+sACC_Index_lithium = which(colData(rse_gene_lithium)$BrainRegion == "sACC")
+mod_sACC_lithium = cbind(modSep_lithium[sACC_Index_lithium,], qSV_mat_lithium[sACC_Index_lithium, ])
+
+
+Amyg_Index_lithium = which(colData(rse_gene_lithium)$BrainRegion == "Amygdala")
+mod_Amyg_lithium = cbind(modSep_lithium[Amyg_Index_lithium,], qSV_mat_lithium[Amyg_Index_lithium, ])
+
+####  Gene ####
+
+###### sACC #######
+dge_sACC = DGEList(counts = assays(rse_gene_lithium[ ,sACC_Index_lithium])$counts, 
+                   genes = rowData(rse_gene_lithium))
+
+dge_sACC = calcNormFactors(dge_sACC)
+
+vGene_sACC = voom(dge_sACC,mod_sACC_lithium, plot=F)
+
+
+fitGene_sACC = lmFit(vGene_sACC)
+eBGene_sACC = eBayes(fitGene_sACC)
+outGene_sACC = topTable(eBGene_sACC,coef=2,
+                        p.value = 1,number=nrow(rse_gene_lithium) )
+outGene_sACC = outGene_sACC[rownames(rse_gene_lithium),]
+
+sum(outGene_sACC$adj.P.Val < 0.05) # 0
+sum(outGene_sACC$P.Value < 0.005) # 52
+
+outGene_sACC <-  outGene_sACC %>% dplyr::rename("common_gene_id" = gencodeID)
+
+
+##### Amygdala #####
+dge_Amyg = DGEList(counts = assays(rse_gene_lithium[,Amyg_Index_lithium])$counts, 
+                   genes = rowData(rse_gene_lithium))
+
+
+dge_Amyg = calcNormFactors(dge_Amyg)
+
+vGene_Amyg = voom(dge_Amyg,mod_Amyg_lithium, plot=F)
+
+fitGene_Amyg = lmFit(vGene_Amyg)
+eBGene_Amyg = eBayes(fitGene_Amyg)
+outGene_Amyg = topTable(eBGene_Amyg,coef=2,
+                        p.value = 1,number=nrow(rse_gene_lithium))
+outGene_Amyg = outGene_Amyg[rownames(rse_gene_lithium),]
+
+sum(outGene_Amyg$adj.P.Val < 0.05) #0
+sum(outGene_Amyg$P.Value < 0.005) #249
+
+outGene_Amyg <-  outGene_Amyg %>% dplyr::rename("common_gene_id" = gencodeID)
+
+
+##### core output ####
+
+nam = c("common_gene_id", "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+geneOut = merge(outGene_Amyg[,nam], outGene_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(geneOut) <-  colnames(geneOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(geneOut ,  here("results" , "Lithium_DPseq_FAS_gene.csv"))
+
+geneOut_list <-  list(outGene_Amyg , outGene_sACC)
+
+names(geneOut_list) <-  c("Amygdala" , "sACC")
+
+
+#### Exon ####
+
+##### sACC ######
+dee_sACC = DGEList(counts = assays(rse_exon_lithium[,sACC_Index_lithium])$counts, 
+                   genes = rowData(rse_exon_lithium))
+dee_sACC = calcNormFactors(dee_sACC)
+
+vExon_sACC = voom(dee_sACC,mod_sACC_lithium, plot=F)
+
+fitExon_sACC = lmFit(vExon_sACC)
+eBExon_sACC = eBayes(fitExon_sACC)
+outExon_sACC = topTable(eBExon_sACC,coef=2,
+                        p.value = 1,number=nrow(rse_exon_lithium))
+outExon_sACC = outExon_sACC[rownames(rse_exon_lithium),]
+sum(outExon_sACC$adj.P.Val < 0.05) #1
+sum(outExon_sACC$P.Value < 0.005) #995
+
+outExon_sACC <-  outExon_sACC %>% dplyr::rename("common_gene_id" = gencodeID)
+
+##### Amygdala ######
+
+dee_Amyg = DGEList(counts = assays(rse_exon_lithium[,Amyg_Index_lithium])$counts, 
+                   genes = rowData(rse_exon_lithium))
+dee_Amyg = calcNormFactors(dee_Amyg)
+
+vExon_Amyg = voom(dee_Amyg,mod_Amyg_lithium, plot=F)
+
+fitExon_Amyg = lmFit(vExon_Amyg)
+eBExon_Amyg = eBayes(fitExon_Amyg)
+outExon_Amyg = topTable(eBExon_Amyg,coef=2,
+                        p.value = 1,number=nrow(rse_exon_lithium))
+outExon_Amyg = outExon_Amyg[rownames(rse_exon_lithium),]
+sum(outExon_Amyg$adj.P.Val < 0.05) #743
+sum(outExon_Amyg$P.Value < 0.005) #4062
+
+outExon_Amyg <-  outExon_Amyg %>% dplyr::rename("common_gene_id" = gencodeID)
+
+
+##### core output #####
+
+nam = c("common_gene_id" , "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+exonOut = merge(outExon_Amyg[,nam], outExon_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(exonOut) <-  colnames(exonOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(exonOut , here("results", "Lithium_DPseq_FAS_exon.csv"))
+
+
+exonOut_list <-  list(outExon_Amyg , outExon_sACC)
+
+names(exonOut_list) <-  c("Amygdala" , "sACC")
+
+
+####  Junction ####
+
+
+##### sACC ######
+dje_sACC = DGEList(counts = assays(rse_jxn_lithium[,sACC_Index_lithium])$counts, 
+                   genes = rowData(rse_jxn_lithium))
+dje_sACC = calcNormFactors(dje_sACC)
+
+vJxn_sACC = voom(dje_sACC,mod_sACC_lithium, plot=F)
+
+fitJxn_sACC = lmFit(vJxn_sACC)
+eBJxn_sACC = eBayes(fitJxn_sACC)
+outJxn_sACC = topTable(eBJxn_sACC,coef=2,
+                       p.value = 1,number=nrow(rse_jxn_lithium))
+outJxn_sACC = outJxn_sACC[rownames(rse_jxn_lithium),]
+sum(outJxn_sACC$adj.P.Val < 0.05) #  3 
+sum(outJxn_sACC$P.Value < 0.005) #  1238
+
+
+outJxn_sACC <-  outJxn_sACC %>% dplyr::rename("common_gene_id" = newGeneID , Symbol_General=newGeneSymbol)
+
+##### Amygdala ######
+dje_Amyg = DGEList(counts = assays(rse_jxn_lithium[,Amyg_Index_lithium])$counts, 
+                   genes = rowData(rse_jxn_lithium))
+dje_Amyg = calcNormFactors(dje_Amyg)
+
+vJxn_Amyg = voom(dje_Amyg,mod_Amyg_lithium, plot=F)
+
+fitJxn_Amyg = lmFit(vJxn_Amyg)
+eBJxn_Amyg = eBayes(fitJxn_Amyg)
+outJxn_Amyg = topTable(eBJxn_Amyg,coef=2,
+                       p.value = 1,number=nrow(rse_jxn_lithium))
+outJxn_Amyg = outJxn_Amyg[rownames(rse_jxn_lithium),]
+sum(outJxn_Amyg$adj.P.Val < 0.05) # 479
+sum(outJxn_Amyg$P.Value < 0.005) # 2894
+
+
+outJxn_Amyg <-  outJxn_Amyg %>% dplyr::rename("common_gene_id" = newGeneID , Symbol_General=newGeneSymbol)
+
+
+##### core output #####
+nam = c("common_gene_id", "Symbol_General",  "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+jxnOut = merge(outJxn_Amyg[,nam], outJxn_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(jxnOut) <-  colnames(jxnOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(jxnOut , here("results", "Lithium_DPseq_FAS_Jxn.csv"))
+
+
+jxnOut_list <-  list(outJxn_Amyg , outJxn_sACC)
+
+names(jxnOut_list) <-  c("Amygdala" , "sACC")
+
+
+####  Transcript ####
+
+txExprs = log2(assays(rse_tx_lithium)$tpm+ 1)
+
+##### sACC ######
+
+fitTx_sACC = lmFit(txExprs[,sACC_Index_lithium], mod_sACC_lithium)
+
+eBTx_sACC = eBayes(fitTx_sACC)
+outTx_sACC = topTable(eBTx_sACC,coef=2,
+                      p.value = 1,number=nrow(rse_tx_lithium), 
+                      genelist = rowRanges(rse_tx_lithium))
+outTx_sACC = outTx_sACC[rownames(rse_tx_lithium),]
+sum(outTx_sACC$adj.P.Val < 0.05)  ## 0
+sum(outTx_sACC$P.Value < 0.005)  ## 316
+
+
+outTx_sACC <-  outTx_sACC %>% dplyr::rename("common_gene_id" = ID.gene_id , Symbol_General= "ID.gene_name")
+
+
+##### Amygdala ######
+
+fitTx_Amyg = lmFit(txExprs[,Amyg_Index_lithium], mod_Amyg_lithium)
+eBTx_Amyg = eBayes(fitTx_Amyg)
+outTx_Amyg = topTable(eBTx_Amyg,coef=2,
+                      p.value = 1,number=nrow(rse_tx_lithium),
+                      genelist = rowRanges(rse_tx_lithium))
+outTx_Amyg = outTx_Amyg[rownames(rse_tx_lithium),]
+sum(outTx_Amyg$adj.P.Val < 0.05)  ## 0
+sum(outTx_Amyg$P.Value < 0.005)  ## 291
+
+
+outTx_Amyg <-  outTx_Amyg %>% dplyr::rename("common_gene_id" = ID.gene_id , Symbol_General= "ID.gene_name")
+
+##### core output #####
+nam = c("common_gene_id" , "Symbol_General" ,   "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+
+txOut = merge(outTx_Amyg[,nam], outTx_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(txOut) <-  colnames(txOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+
+write.csv(txOut , here("results", "Lithium_DPseq_FAS_Transcript.csv"))
+
+txOut_list <-  list(outTx_Amyg , outTx_sACC)
+
+names(txOut_list) <-  c("Amygdala" , "sACC")
+
+
+Outlist <-  list("gene" = geneOut_list, "exon" = exonOut_list, "jxn" = jxnOut_list ,"tx" = txOut_list)
+
+
+save(Outlist , file = here("results", "Lithium results DPseqmodel.RDS"))
+
+## Reproducibility information
+Sys.time()
+proc.time()
+options(width=120)
+sessioninfo::session_info()
+
+

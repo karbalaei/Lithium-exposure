@@ -1,0 +1,18 @@
+library(biomartr)
+
+test <-  is.genome.available(db = "refseq", organism = "Homo sapiens", details = TRUE)
+
+
+# Install and load required packages if not already installed
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+
+# Example Ensembl gene IDs
+ensembl_ids <- c("ENSG00000223572", "ENSG00000227195" , "ENSG00000227195" , "ENSG00000112679" , "ENSG00000152082")
+
+# Convert Ensembl IDs to Entrez IDs using mapIds function
+entrez_ids <- mapIds(org.Hs.eg.db, keys = ensembl_ids, column = "ENTREZID", keytype = "ENSEMBL")
+
+# Print the results
+cat("Ensembl ID", "Entrez ID", sep = "\t")
+cat("\n", ensembl_ids, entrez_ids, sep = "\t")

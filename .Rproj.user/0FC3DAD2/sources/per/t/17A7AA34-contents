@@ -1,0 +1,1641 @@
+rm(list= ls())
+
+
+### Library ####
+
+library(SummarizedExperiment)
+library(jaffelab)
+library(recount)
+library(sva)
+library(edgeR)
+library(dplyr)
+library(readr)
+library(org.Hs.eg.db)
+library(clusterProfiler)
+library(purrr)
+library(here)
+library(enrichplot)
+library(ggnewscale)
+library(sessioninfo)
+library("KEGGREST")
+library(vctrs)
+library(tibble)
+library(stringr)
+library(tidyr)
+library(plotly)
+library(gridExtra)
+
+# if(!"tasic2016data" %in% rownames(installed.packages())) {
+#   devtools::install_github("AllenInstitute/tasic2016data")
+# }
+
+#remotes::install_github("AllenInstitute/scrattch.hicat")
+library(scrattch.hicat)
+
+
+### Loading data and preparing lithium df  #####
+setwd("D:/BPseq_data/Old")
+here()
+
+here::i_am("Lithium Bipseq code_Bipseq data DPseq_model_Normalization_after_selection_samples.R")
+
+load(here("data", "zandiHypde_bipolar_rseGene_n511.rda"))
+load(here("data","zandiHypde_bipolar_rseExon_n511.rda"))
+load(here("data","zandiHypde_bipolar_rseJxn_n511.rda"))
+load(here("data","zandiHypde_bipolar_rseTx_n511.rda"))
+load(here("data","degradation_rse_BipSeq_BothRegions.rda")) #load cov_rse
+
+
+identical(colnames(rse_gene), colnames(cov_rse)) # TRUE
+rse_gene$Dx = factor(ifelse(rse_gene$PrimaryDx == "Control", "Control","Bipolar"), 
+                     levels = c("Control", "Bipolar"))
+
+##### add ancestry  ####
+load(here("data","zandiHyde_bipolar_MDS_n511.rda")) # load mds
+
+
+mds = mds[rse_gene$BrNum,1:5]
+colnames(mds) = paste0("snpPC", 1:5)
+colData(rse_gene) = cbind(colData(rse_gene), mds)
+
+
+#### Lithium exposure info ####
+
+
+drug_info = read.delim("lithium/drug_info.csv",as.is=TRUE , sep = ",")
+
+
+rse_gene$lithium = drug_info$lithium[match(rse_gene$BrNum, drug_info$BrNum)]
+rse_gene$lifetime_lithium = drug_info$life_lithium[match(rse_gene$BrNum, drug_info$BrNum)]
+rse_gene$lithium_group = NA
+rse_gene$lithium_group[which(rse_gene$lithium==1)] =1 
+rse_gene$lithium_group[which(rse_gene$lithium==0 & rse_gene$lifetime_lithium==0)] =0
+
+table(rse_gene$lithium_group , rse_gene$BrainRegion)
+
+# Amygdala sACC
+# 0       25   27
+# 1        9   10
+
+
+### Filtering, whole data step1 ####
+
+##### Gene ######
+assays(rse_gene)$rpkm = recount::getRPKM(rse_gene, 'Length')
+geneIndex = rowMeans(assays(rse_gene)$rpkm) > 0.25  ## both regions
+rse_gene = rse_gene[geneIndex,]
+
+#####  Exon #####
+
+assays(rse_exon)$rpkm = recount::getRPKM(rse_exon, 'Length')
+exonIndex = rowMeans(assays(rse_exon)$rpkm) > 0.3
+rse_exon = rse_exon[exonIndex,]
+
+
+#### Junction #####
+
+rowRanges(rse_jxn)$Length <- 100
+assays(rse_jxn)$rp10m = recount::getRPKM(rse_jxn, 'Length')
+
+jxnIndex = rowMeans(assays(rse_jxn)$rp10m) > 0.35 & rowData(rse_jxn)$Class != "Novel"
+rse_jxn = rse_jxn[jxnIndex,]
+
+
+#### Transcript ####
+txIndex = rowMeans(assays(rse_tx)$tpm) > 0.4 
+rse_tx = rse_tx[txIndex,]
+
+
+
+### Get qSVs and create model whole samples,  step2 ####  
+
+
+#### qSVs #####
+
+modJoint = model.matrix(~Dx*BrainRegion + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
+                          mitoRate + rRNA_rate + totalAssignedGene + RIN +  abs(ERCCsumLogErr), 
+                        data=colData(rse_gene))
+
+
+degExprs = log2(assays(cov_rse)$count+1)
+k = num.sv(degExprs, modJoint) # 19
+qSV_mat = prcomp(t(degExprs))$x[,1:k]
+varExplQsva = getPcaVars(prcomp(t(degExprs)))
+varExplQsva[1:k]
+sum(varExplQsva[1:k]) # 87.976%
+
+####  model w/o interaction to subset by region and extracting qSVs ans samples related to Lithium exposures #### 
+
+modSep_lithium  = model.matrix(~lithium_group + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
+                                 mitoRate + rRNA_rate + totalAssignedGene + RIN + abs(ERCCsumLogErr), 
+                               data=colData(rse_gene)) 
+
+##### extract qSVs related to Lithium exposures #####
+
+qSV_mat_lithium = qSV_mat[rownames(modSep_lithium),]
+
+
+##### extract samples related to Lithium exposures #####
+
+rse_gene_lithium = rse_gene[,rownames(modSep_lithium)]
+rse_exon_lithium = rse_exon[,rownames(modSep_lithium)]
+rse_jxn_lithium = rse_jxn[,rownames(modSep_lithium)]
+rse_tx_lithium = rse_tx[,rownames(modSep_lithium)]
+
+Group_info <-  tibble(Id = rse_gene_lithium$SampleID , Group = rse_gene_lithium$lithium_group , region = rse_gene_lithium$BrainRegion)
+
+
+### Filtering data only on lithiuim samples,  step3 ####
+
+##### Gene ######
+assays(rse_gene_lithium)$rpkm = recount::getRPKM(rse_gene_lithium, 'Length')
+geneIndex = rowMeans(assays(rse_gene_lithium)$rpkm) > 0.25  ## both regions
+rse_gene_lithium = rse_gene_lithium[geneIndex,]
+
+#####  Exon #####
+
+assays(rse_exon_lithium)$rpkm = recount::getRPKM(rse_exon_lithium, 'Length')
+exonIndex = rowMeans(assays(rse_exon_lithium)$rpkm) > 0.3
+rse_exon_lithium = rse_exon_lithium[exonIndex,]
+
+
+#### Junction #####
+
+rowRanges(rse_jxn_lithium)$Length <- 100
+assays(rse_jxn_lithium)$rp10m = recount::getRPKM(rse_jxn_lithium, 'Length')
+
+jxnIndex = rowMeans(assays(rse_jxn_lithium)$rp10m) > 0.35 & rowData(rse_jxn_lithium)$Class != "Novel"
+rse_jxn_lithium = rse_jxn_lithium[jxnIndex,]
+
+
+#### Transcript ####
+txIndex = rowMeans(assays(rse_tx_lithium)$tpm) > 0.4 
+rse_tx_lithium = rse_tx_lithium[txIndex,]
+
+
+
+### Differentially expressed feature analysis , step4 #####
+
+
+#### split back by region ####
+
+sACC_Index_lithium = which(colData(rse_gene_lithium)$BrainRegion == "sACC")
+mod_sACC_lithium = cbind(modSep_lithium[sACC_Index_lithium,], qSV_mat_lithium[sACC_Index_lithium, ])
+
+
+Amyg_Index_lithium = which(colData(rse_gene_lithium)$BrainRegion == "Amygdala")
+mod_Amyg_lithium = cbind(modSep_lithium[Amyg_Index_lithium,], qSV_mat_lithium[Amyg_Index_lithium, ])
+
+sACC_info <-  mod_sACC_lithium %>% data.frame() %>% rownames_to_column("Sample_Id") %>% dplyr::select(c("Sample_Id" , "lithium_group"))
+Amyg_info <-  mod_Amyg_lithium %>% data.frame() %>% rownames_to_column("Sample_Id") %>% dplyr::select(c("Sample_Id" , "lithium_group"))
+
+col_ids_0_sACC <-  sACC_info %>% dplyr::filter(lithium_group == 0) %>% pull(1) 
+col_ids_1_sACC <-  sACC_info %>% dplyr::filter(lithium_group == 1) %>% pull(1) 
+
+col_ids_0_Amyg <-  Amyg_info %>% dplyr::filter(lithium_group == 0) %>% pull(1) 
+col_ids_1_Amyg <-  Amyg_info %>% dplyr::filter(lithium_group == 1) %>% pull(1) 
+
+
+####  Gene ####
+
+###### sACC #######
+dge_sACC = DGEList(counts = assays(rse_gene_lithium[ ,sACC_Index_lithium])$counts, 
+                            genes = rowData(rse_gene_lithium))
+
+
+dge_sACC = calcNormFactors(dge_sACC)
+
+Gcount_sACC<-  logCPM(dge_sACC$counts)
+
+vGene_sACC = voom(dge_sACC,mod_sACC_lithium, plot=F)
+
+vGene_sACC$E %>% 
+  write.csv(here("Count_matrix","logCPM_sACC_gene.csv"))
+
+fitGene_sACC = lmFit(vGene_sACC)
+eBGene_sACC = eBayes(fitGene_sACC)
+outGene_sACC = topTable(eBGene_sACC,coef=2,
+                                p.value = 1,number=nrow(rse_gene_lithium) )
+outGene_sACC = outGene_sACC[rownames(rse_gene_lithium),]
+
+sum(outGene_sACC$adj.P.Val < 0.05) # 0
+sum(outGene_sACC$P.Value < 0.005) # 52
+
+outGene_sACC <-  outGene_sACC %>% dplyr::rename("common_gene_id" = gencodeID)
+
+
+##### Amygdala #####
+dge_Amyg = DGEList(counts = assays(rse_gene_lithium[,Amyg_Index_lithium])$counts, 
+                           genes = rowData(rse_gene_lithium))
+
+
+dge_Amyg = calcNormFactors(dge_Amyg)
+
+Gcount_Amyg<-  logCPM(dge_Amyg$counts)
+
+
+vGene_Amyg = voom(dge_Amyg,mod_Amyg_lithium, plot=F)
+
+vGene_Amyg$E %>% 
+  write.csv(here("Count_matrix","logCPM_Amyg_gene.csv"))
+
+fitGene_Amyg = lmFit(vGene_Amyg)
+eBGene_Amyg = eBayes(fitGene_Amyg)
+outGene_Amyg = topTable(eBGene_Amyg,coef=2,
+                                p.value = 1,number=nrow(rse_gene_lithium))
+outGene_Amyg = outGene_Amyg[rownames(rse_gene_lithium),]
+
+sum(outGene_Amyg$adj.P.Val < 0.05) #0
+sum(outGene_Amyg$P.Value < 0.005) #249
+
+outGene_Amyg <-  outGene_Amyg %>% dplyr::rename("common_gene_id" = gencodeID)
+
+
+##### core output ####
+
+nam = c("common_gene_id", "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+geneOut = merge(outGene_Amyg[,nam], outGene_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(geneOut) <-  colnames(geneOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(geneOut ,  here("model_results" , "Lithium_DPseq_model_FAS_gene.csv"))
+
+geneOut_list <-  list(outGene_Amyg , outGene_sACC)
+
+names(geneOut_list) <-  c("Amygdala" , "sACC")
+
+
+#### Exon ####
+
+##### sACC ######
+dee_sACC = DGEList(counts = assays(rse_exon_lithium[,sACC_Index_lithium])$counts, 
+                   genes = rowData(rse_exon_lithium))
+dee_sACC = calcNormFactors(dee_sACC)
+
+Ecount_sACC<-  logCPM(dee_sACC$counts)
+
+
+vExon_sACC = voom(dee_sACC,mod_sACC_lithium, plot=F)
+
+fitExon_sACC = lmFit(vExon_sACC)
+eBExon_sACC = eBayes(fitExon_sACC)
+outExon_sACC = topTable(eBExon_sACC,coef=2,
+                        p.value = 1,number=nrow(rse_exon_lithium))
+outExon_sACC = outExon_sACC[rownames(rse_exon_lithium),]
+sum(outExon_sACC$adj.P.Val < 0.05) #1
+sum(outExon_sACC$P.Value < 0.005) #995
+
+outExon_sACC <-  outExon_sACC %>% dplyr::rename("common_gene_id" = gencodeID)
+
+##### Amygdala ######
+
+dee_Amyg = DGEList(counts = assays(rse_exon_lithium[,Amyg_Index_lithium])$counts, 
+                   genes = rowData(rse_exon_lithium))
+dee_Amyg = calcNormFactors(dee_Amyg)
+
+Ecount_Amyg<-  logCPM(dee_Amyg$counts)
+
+vExon_Amyg = voom(dee_Amyg,mod_Amyg_lithium, plot=F)
+
+fitExon_Amyg = lmFit(vExon_Amyg)
+eBExon_Amyg = eBayes(fitExon_Amyg)
+outExon_Amyg = topTable(eBExon_Amyg,coef=2,
+                        p.value = 1,number=nrow(rse_exon_lithium))
+outExon_Amyg = outExon_Amyg[rownames(rse_exon_lithium),]
+sum(outExon_Amyg$adj.P.Val < 0.05) #743
+sum(outExon_Amyg$P.Value < 0.005) #4062
+
+outExon_Amyg <-  outExon_Amyg %>% dplyr::rename("common_gene_id" = gencodeID)
+
+
+##### core output #####
+
+nam = c("common_gene_id" , "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+exonOut = merge(outExon_Amyg[,nam], outExon_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(exonOut) <-  colnames(exonOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(exonOut , here("model_results", "Lithium_DPseq_model_FAS_exon.csv"))
+
+
+exonOut_list <-  list(outExon_Amyg , outExon_sACC)
+
+names(exonOut_list) <-  c("Amygdala" , "sACC")
+
+
+####  Junction ####
+
+
+##### sACC ######
+dje_sACC = DGEList(counts = assays(rse_jxn_lithium[,sACC_Index_lithium])$counts, 
+                   genes = rowData(rse_jxn_lithium))
+dje_sACC = calcNormFactors(dje_sACC)
+Jcount_sACC<-  logCPM(dje_sACC$counts)
+
+vJxn_sACC = voom(dje_sACC,mod_sACC_lithium, plot=F)
+
+fitJxn_sACC = lmFit(vJxn_sACC)
+eBJxn_sACC = eBayes(fitJxn_sACC)
+outJxn_sACC = topTable(eBJxn_sACC,coef=2,
+                       p.value = 1,number=nrow(rse_jxn_lithium))
+outJxn_sACC = outJxn_sACC[rownames(rse_jxn_lithium),]
+sum(outJxn_sACC$adj.P.Val < 0.05) #  3 
+sum(outJxn_sACC$P.Value < 0.005) #  1238
+
+
+outJxn_sACC <-  outJxn_sACC %>% dplyr::rename("common_gene_id" = newGeneID , Symbol_General=newGeneSymbol)
+
+##### Amygdala ######
+dje_Amyg = DGEList(counts = assays(rse_jxn_lithium[,Amyg_Index_lithium])$counts, 
+                   genes = rowData(rse_jxn_lithium))
+dje_Amyg = calcNormFactors(dje_Amyg)
+
+Jcount_Amyg<-  logCPM(dje_Amyg$counts)
+
+
+vJxn_Amyg = voom(dje_Amyg,mod_Amyg_lithium, plot=F)
+
+fitJxn_Amyg = lmFit(vJxn_Amyg)
+eBJxn_Amyg = eBayes(fitJxn_Amyg)
+outJxn_Amyg = topTable(eBJxn_Amyg,coef=2,
+                       p.value = 1,number=nrow(rse_jxn_lithium))
+outJxn_Amyg = outJxn_Amyg[rownames(rse_jxn_lithium),]
+sum(outJxn_Amyg$adj.P.Val < 0.05) # 479
+sum(outJxn_Amyg$P.Value < 0.005) # 2894
+
+
+outJxn_Amyg <-  outJxn_Amyg %>% dplyr::rename("common_gene_id" = newGeneID , Symbol_General=newGeneSymbol)
+
+
+##### core output #####
+nam = c("common_gene_id", "Symbol_General",  "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+jxnOut = merge(outJxn_Amyg[,nam], outJxn_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(jxnOut) <-  colnames(jxnOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(jxnOut , here("model_results", "Lithium_DPseq_model_FAS_Jxn.csv"))
+
+
+jxnOut_list <-  list(outJxn_Amyg , outJxn_sACC)
+
+names(jxnOut_list) <-  c("Amygdala" , "sACC")
+
+
+####  Transcript ####
+
+txExprs = log2(assays(rse_tx_lithium)$tpm+ 1)
+
+##### sACC ######
+
+Tcount_sACC<-  txExprs[,sACC_Index_lithium]
+
+
+fitTx_sACC = lmFit(txExprs[,sACC_Index_lithium], mod_sACC_lithium)
+
+eBTx_sACC = eBayes(fitTx_sACC)
+outTx_sACC = topTable(eBTx_sACC,coef=2,
+                      p.value = 1,number=nrow(rse_tx_lithium), 
+                      genelist = rowRanges(rse_tx_lithium))
+outTx_sACC = outTx_sACC[rownames(rse_tx_lithium),]
+sum(outTx_sACC$adj.P.Val < 0.05)  ## 0
+sum(outTx_sACC$P.Value < 0.005)  ## 316
+
+
+outTx_sACC <-  outTx_sACC %>% dplyr::rename("common_gene_id" = ID.gene_id , Symbol_General= "ID.gene_name")
+
+
+##### Amygdala ######
+
+Tcount_Amyg<-  txExprs[,Amyg_Index_lithium]
+
+fitTx_Amyg = lmFit(txExprs[,Amyg_Index_lithium], mod_Amyg_lithium)
+eBTx_Amyg = eBayes(fitTx_Amyg)
+outTx_Amyg = topTable(eBTx_Amyg,coef=2,
+                      p.value = 1,number=nrow(rse_tx_lithium),
+                      genelist = rowRanges(rse_tx_lithium))
+outTx_Amyg = outTx_Amyg[rownames(rse_tx_lithium),]
+sum(outTx_Amyg$adj.P.Val < 0.05)  ## 0
+sum(outTx_Amyg$P.Value < 0.005)  ## 291
+
+
+outTx_Amyg <-  outTx_Amyg %>% dplyr::rename("common_gene_id" = ID.gene_id , Symbol_General= "ID.gene_name")
+
+##### core output #####
+nam = c("common_gene_id" , "Symbol_General" ,   "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B")
+
+
+txOut = merge(outTx_Amyg[,nam], outTx_sACC[,nam], by ='row.names', all = TRUE) %>% column_to_rownames("Row.names")
+
+colnames(txOut) <-  colnames(txOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+
+write.csv(txOut , here("model_results", "Lithium_DPseq_model_FAS_Transcript.csv"))
+
+txOut_list <-  list(outTx_Amyg , outTx_sACC)
+
+names(txOut_list) <-  c("Amygdala" , "sACC")
+
+
+Outlist <-  list("gene" = geneOut_list, "exon" = exonOut_list, "jxn" = jxnOut_list ,"tx" = txOut_list)
+
+#### Get signif genes####
+
+Outlist$gene$Amygdala %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() # 249
+
+Outlist$gene$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() #52
+
+
+Outlist$exon$Amygdala %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() # 1014
+
+Outlist$exon$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() #526
+
+
+Outlist$jxn$Amygdala %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() # 1675
+
+Outlist$jxn$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() #1019
+
+Outlist$tx$Amygdala %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() # 287
+
+Outlist$tx$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull("common_gene_id") %>% unique() %>% length() #320
+
+
+save(Outlist , file = "Lithium results DPseqmodel.RDS")
+#### Add Zero counts to output ####
+
+
+Add_z_count_output <-  function(count1 , count2 , outdf1 , outdf2 , type) {
+  
+Count_0_1 <-  count1[ , col_ids_0_sACC] %>%rowCounts(useNames = T, value = 0) %>% enframe( name = "Id" , value ="Control") 
+
+Count_1_1 <-  count1[ , col_ids_1_sACC]  %>%rowCounts(useNames = T, value = 0) %>% enframe(name = "Id" ,value = "Exposure") 
+
+Count_All_1 <-  count1 %>% rowCounts(useNames = T, value = 0) %>% enframe(name = "Id" ,value = "All") 
+
+outdf1 <-  outdf1 %>% as.data.frame() %>% rownames_to_column("Id")  
+
+outdf1_ready <- list(Count_0_1, Count_1_1, Count_All_1 , outdf1) %>%       
+  reduce(full_join, by='Id') 
+
+
+Count_0_2 <-  count2[ , col_ids_0_Amyg] %>%rowCounts(useNames = T, value = 0) %>% enframe( name = "Id" , value ="Control") 
+
+Count_1_2 <-  count2[ , col_ids_1_Amyg]  %>%rowCounts(useNames = T, value = 0) %>% enframe(name = "Id" ,value = "Exposure") 
+
+Count_All_2 <-  count2 %>% rowCounts(useNames = T, value = 0) %>% enframe(name = "Id" ,value = "All") 
+
+outdf2 <-  outdf2 %>% as.data.frame() %>% rownames_to_column("Id") 
+
+outdf2_ready <- list(Count_0_2, Count_1_2, Count_All_2 , outdf2) %>%
+                reduce(full_join, by='Id')
+
+nam = c("Id", "common_gene_id", "logFC", "AveExpr","t", "P.Value", "adj.P.Val", "B" , "Control" , "Exposure" , "All")
+
+dfOut = merge(outdf1_ready[,nam], outdf2_ready[,nam], by ='Id', all = TRUE)
+#%>% column_to_rownames("Row.names")
+
+colnames(dfOut) <-  colnames(dfOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
+
+write.csv(dfOut ,  here("model_results" , paste0("Lithium_DPseq_model_FAS_Zero_counts_" , type, ".csv")) , row.names = F)
+
+}
+
+Add_z_count_output(Gcount_sACC , Gcount_Amyg ,  outGene_sACC , outGene_Amyg , "Gene")
+Add_z_count_output(Ecount_sACC , Ecount_Amyg ,  outExon_sACC , outExon_Amyg , "Exon")
+Add_z_count_output(Jcount_sACC , Jcount_Amyg ,  outJxn_sACC , outJxn_Amyg , "Junction")
+Add_z_count_output(Tcount_sACC , Tcount_Amyg ,  outTx_sACC , outTx_sACC , "Transcript")
+
+#### Volcano plot #######
+
+out_path <-  "d:/BPseq_data/Old/graphs/Volcanoplots/"
+
+
+volcanoplot_fn <-  function(data ,  Genes= Genes, logFC = logFC ,   PValue= PValue , 
+                            FDR=FDR , FDR_based= T , output_type = "PDF" , width = 5 , height = 5 ,  
+                            legendposition = 'right' , simple_graph=T , topgenes_graph = F , topgenes= 10 , log2_i = 50,
+                            FDR_cutoff = 0.05 , pvalue_cutoff = 0.05 ) {
+  if (FDR_based == T ) {
+    
+    data <- data %>% 
+      mutate(
+        Significance = case_when(
+          abs(logFC) >= log2(1 + (log2_i/100) ) & FDR <= 0.1 & FDR > 0.05 ~ "FDR 0.1",
+          abs(logFC) >= log2(1 + (log2_i/100) ) & FDR <= 0.05 & FDR > 0.01 ~ "FDR 0.05", 
+          abs(logFC) >= log2(1 + (log2_i/100) ) & FDR <= 0.01 & FDR > 0.001 ~ "FDR 0.01",
+          abs(logFC) >= log2(1 + (log2_i/100) ) & FDR <= 0.001 ~ "FDR 0.001", 
+          TRUE ~ "Unchanged" ), 
+        Expression = case_when(logFC >= log2(1 + (log2_i/100) ) & FDR <= FDR_cutoff ~ "Up-regulated",
+                               logFC <= -log2(1 + (log2_i/100) ) & FDR <= FDR_cutoff ~ "Down-regulated",
+                               TRUE ~ "Unchanged"))
+    top_genes <- bind_rows(
+      data %>% 
+        filter(Expression == 'Up-regulated') %>% 
+        arrange(FDR, desc(abs(logFC))) %>% 
+        head(topgenes),
+      data %>% 
+        filter(Expression == 'Down-regulated') %>% 
+        arrange(FDR, desc(abs(logFC))) %>% 
+        head(topgenes)
+    )
+    
+    if(simple_graph == T ) {
+      if(topgenes_graph == F ) {
+        
+        simple_graph <- ggplot(data, aes(logFC, -log(FDR,10))) +
+          geom_point(aes(color = Expression), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"FDR")) +
+          scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          theme_classic() +
+          theme(legend.position= legendposition) 
+        
+        ggsave( paste0(out_path, "/Vocano_simple_graph_FDR." , output_type) , width = width  , height = height , units = "in", dpi = 600 )
+        
+      } else {
+        simple_graph_top_genes <- ggplot(data, aes(logFC, -log(FDR,10))) +
+          geom_point(aes(color = Expression), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"FDR")) +
+          scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          geom_label_repel(data = top_genes,
+                           mapping = aes(label = Genes),
+                           size = 2) + theme_classic()+
+          theme(legend.position= legendposition)
+        
+        ggsave( paste0(out_path, "/Vocano_simple_graph_Top_genes_FDR." , output_type) , width = width  , height = height ,  units = "in", dpi = 600)
+        
+      }
+    } else {
+      if(topgenes_graph == F ) {
+        Significancy_graph <- ggplot(data, aes(logFC, -log(FDR,10))) +
+          geom_point(aes(color = Significance), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"FDR")) +
+          scale_color_viridis_d() +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          theme_classic() +
+          theme(legend.position= legendposition)
+        
+        ggsave( paste0(out_path, "/Vocano_Significancy_graph_FDR.", output_type) , width = width , height = height  ,  units = "in", dpi = 600)
+        
+      } else {
+        
+        Significancy_graph_topgenes <-  ggplot(data, aes(logFC, -log(FDR,10))) +
+          geom_point(aes(color = Significance), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"FDR")) +
+          scale_color_viridis_d() +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          geom_label_repel(data = top_genes,
+                           mapping = aes(logFC, -log(FDR,10), label = Genes),
+                           size = 2) + theme_classic() +
+          theme(legend.position= legendposition)
+        
+        
+        ggsave( paste0(out_path, "/Vocano_significancy_graph_topgenes_FDR.pdf") , width = width , height = height ,  units = "in", dpi = 600)
+        
+      }
+    }
+  } else {
+    
+    data <- data %>% 
+      mutate(
+        Significance = case_when(
+          abs(logFC) >= log2(1 + (log2_i/100) ) & PValue <= 0.05 & PValue > 0.01 ~ "PValue 0.05", 
+          abs(logFC) >= log2(1 + (log2_i/100) ) & PValue <= 0.01 & PValue > 0.001 ~ "PValue 0.01",
+          abs(logFC) >= log2(1 + (log2_i/100) ) & PValue <= 0.001 ~ "PValue 0.001", 
+          TRUE ~ "Unchanged" ), 
+        Expression = case_when(logFC >= log2(1 + (log2_i/100) ) & PValue <= pvalue_cutoff ~ "Up-regulated",
+                               logFC <= -log2(1 + (log2_i/100) ) & PValue <= pvalue_cutoff ~ "Down-regulated",
+                               TRUE ~ "Unchanged"))
+    
+    top_genes <- bind_rows(
+      data %>% 
+        filter(Expression == 'Up-regulated') %>% 
+        arrange(PValue, desc(abs(logFC))) %>% 
+        head(topgenes),
+      data %>% 
+        filter(Expression == 'Down-regulated') %>% 
+        arrange(PValue, desc(abs(logFC))) %>% 
+        head(topgenes))
+    
+    if(simple_graph == T ) {
+      if(topgenes_graph == F ) {
+        
+        simple_graph <- ggplot(data, aes(logFC, -log(PValue,10))) +
+          geom_point(aes(color = Expression), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"PValue")) +
+          scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          theme_classic() +
+          theme(legend.position= legendposition) 
+        
+        ggsave( paste0(out_path, "/Vocano_simple_graph_PValue." , output_type) , width = width  , height = height ,  units = "in", dpi = 600)
+        
+      } else {
+        simple_graph_top_genes <- ggplot(data, aes(logFC, -log(PValue,10))) +
+          geom_point(aes(color = Expression), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"PValue")) +
+          scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          theme(legend.position= legendposition)+
+          geom_label_repel(data = top_genes,
+                           mapping = aes(label = Genes),
+                           size = 2) + theme_classic() +
+          theme(legend.position= legendposition) 
+        
+        ggsave( paste0(out_path, "/Vocano_simple_graph_Top_genes_PValue." , output_type) , width = width  , height = height ,  units = "in", dpi = 600 )
+        
+      }
+    } else {
+      if(topgenes_graph == F ) {
+        Significancy_graph <- ggplot(data, aes(logFC, -log(PValue,10))) +
+          geom_point(aes(color = Significance), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"PValue")) +
+          scale_color_viridis_d() +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          theme_classic() +
+          theme(legend.position= legendposition)
+        
+        ggsave( paste0(out_path, "/Vocano_Significancy_graph_PValue.", output_type) , width = width , height = height  ,  units = "in", dpi = 600)
+        
+      } else {
+        
+        Significancy_graph_topgenes <-  ggplot(data, aes(logFC, -log(PValue,10))) +
+          geom_point(aes(color = Significance), size = 2/5) +
+          xlab(expression("log"[2]*"FC")) + 
+          ylab(expression("-log"[10]*"PValue")) +
+          scale_color_viridis_d() +
+          guides(colour = guide_legend(override.aes = list(size=1.5))) +
+          geom_label_repel(data = top_genes,
+                           mapping = aes(logFC, -log(PValue,10), label = Genes),
+                           size = 2) + theme_classic() +
+          theme(legend.position= legendposition) 
+        
+        
+        ggsave( paste0(out_path, "/Vocano_significancy_graph_topgenes_PValue.pdf") , width = width , height = height  ,  units = "in", dpi = 600)
+        
+      }
+    }
+    
+    
+  }
+  
+}
+
+
+library(readr)
+Lithium_DPseq_model_FAS_Zero_counts_Gene <- read_csv("D:/BPseq_data/Old/model_results/Lithium_DPseq_model_FAS_Zero_counts_Gene.csv")
+colnames(Lithium_DPseq_model_FAS_Zero_counts_Gene)
+
+
+setwd("d:/BPseq_data/Old/")
+
+here::i_am("Lithium Bipseq code_Bipseq data DPseq_model_Filter_after_selection_samples.R")
+
+
+
+sample_type = "Control"
+
+region = "Amygdala"
+ 
+
+p1 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_Amygdala == 0 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("No zero allowed in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p2 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_Amygdala > 0 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("At least one Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p3 <- Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_Amygdala  < 3 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum three Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p4 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_Amygdala < 10) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum ten Zero in  " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+
+grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+
+dev.off()
+
+
+sample_type = "Exposure"
+
+region = "Amygdala"
+
+
+p1 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter( Exposure_Amygdala == 0 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("No zero allowed in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p2 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Exposure_Amygdala > 0 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("At least one Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p3 <- Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Exposure_Amygdala  < 3 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum three Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p4 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Exposure_Amygdala < 5) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum Five Zero in  " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+
+grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+
+dev.off()
+
+
+sample_type = "All"
+
+region = "Amygdala"
+
+
+p1 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter( All_Amygdala == 0 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("No zero allowed in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p2 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(All_Amygdala > 0 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("At least one Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p3 <- Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(All_Amygdala  < 3 ) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum three Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p4 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(All_Amygdala < 10) %>% 
+  mutate(Expression = case_when(logFC_Amygdala >= log2(1) & P.Value_Amygdala <= 0.05 ~ "Up-regulated",
+                                logFC_Amygdala <= -log2(1 ) & P.Value_Amygdala <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_Amygdala, -log(P.Value_Amygdala,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum Ten Zero in  " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+
+grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+
+dev.off()
+
+
+
+
+sample_type = "Control"
+
+region = "sACC"
+
+
+p1 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_sACC == 0 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("No zero allowed in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p2 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_sACC > 0 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("At least one Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p3 <- Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_sACC  < 3 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum three Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p4 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Control_sACC < 10) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum ten Zero in  " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+
+grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+
+dev.off()
+
+
+sample_type = "Exposure"
+
+region = "sACC"
+
+
+p1 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter( Exposure_sACC == 0 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("No zero allowed in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p2 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Exposure_sACC > 0 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("At least one Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p3 <- Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Exposure_sACC  < 3 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum three Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p4 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(Exposure_sACC < 5) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum Five Zero in  " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+
+grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+
+dev.off()
+
+
+sample_type = "All"
+
+region = "sACC"
+
+
+p1 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter( All_sACC == 0 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("No zero allowed in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p2 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(All_sACC > 0 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("At least one Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p3 <- Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(All_sACC  < 3 ) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum three Zero in " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+
+p4 <-  Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+  dplyr::filter(All_sACC < 10) %>% 
+  mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                TRUE ~ "Unchanged")) %>%
+  ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+  geom_point(aes(color = Expression), size = 1) +
+  xlab(expression("log"[2]*"FC")) + 
+  ylab(expression("-log"[10]*"PValue")) +
+  scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+  guides(colour = guide_legend(override.aes = list(size=1.5))) +
+  theme_classic() +
+  theme(legend.position= 'none') +
+  labs(title = paste0("Maximum Ten Zero in  " , sample_type)) +
+  xlim( -7 , 7) + ylim( 0 , 5)
+
+jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+
+grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+
+dev.off()
+
+
+
+
+
+
+
+Volcano_Zero <-  function(df , column_0 , column_FC , column_P , sample_type , region  , cut1 , cut2 , cut3) {
+p1 <-  df %>% 
+   dplyr::filter(column_0 == 0 ) %>% 
+   mutate(Expression = case_when(column_FC >= log2(1) & column_P <= 0.05 ~ "Up-regulated",
+                                 column_FC <= -log2(1 ) & column_P <= 0.05 ~ "Down-regulated",
+                            TRUE ~ "Unchanged")) %>%
+                               ggplot(aes(column_FC, -log(column_P,10))) +
+                                           geom_point(aes(color = Expression), size = 1) +
+                                           xlab(expression("log"[2]*"FC")) + 
+                                           ylab(expression("-log"[10]*"PValue")) +
+                                           scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+                                           guides(colour = guide_legend(override.aes = list(size=1.5))) +
+                                           theme_classic() +
+                                           theme(legend.position= 'none') +
+                                           labs(title = paste0("No zero allowed in " , sample_type)) +
+                                          xlim( -7 , 7) + ylim( 0 , 5)
+ 
+ 
+ p2 <-  df %>% 
+   dplyr::filter(column_0 > cut1 ) %>% 
+   mutate(Expression = case_when(column_FC >= log2(1) & column_P <= 0.05 ~ "Up-regulated",
+                                 column_FC <= -log2(1 ) & column_P <= 0.05 ~ "Down-regulated",
+                                 TRUE ~ "Unchanged")) %>%
+   ggplot(aes(column_FC, -log(column_P,10))) +
+   geom_point(aes(color = Expression), size = 1) +
+   xlab(expression("log"[2]*"FC")) + 
+   ylab(expression("-log"[10]*"PValue")) +
+   scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+   guides(colour = guide_legend(override.aes = list(size=1.5))) +
+   theme_classic() +
+   theme(legend.position= 'none') +
+   labs(title = paste0("At least " ,  cut1 ,  " Zero in " , sample_type)) +
+   xlim( -7 , 7) + ylim( 0 , 5)
+ 
+ 
+ p3 <- df %>% 
+   dplyr::filter(column_0  < cut2 ) %>% 
+   mutate(Expression = case_when(column_FC >= log2(1) & column_P <= 0.05 ~ "Up-regulated",
+                                 column_FC <= -log2(1 ) & column_P <= 0.05 ~ "Down-regulated",
+                                 TRUE ~ "Unchanged")) %>%
+   ggplot(aes(column_FC, -log(column_P,10))) +
+   geom_point(aes(color = Expression), size = 1) +
+   xlab(expression("log"[2]*"FC")) + 
+   ylab(expression("-log"[10]*"PValue")) +
+   scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+   guides(colour = guide_legend(override.aes = list(size=1.5))) +
+   theme_classic() +
+   theme(legend.position= 'none') +
+   labs(title = paste0("Maximum " , cut2,  " Zero in " , sample_type)) +
+   xlim( -7 , 7) + ylim( 0 , 5)
+ 
+ 
+ p4 <-  df %>% 
+   dplyr::filter(column_0 < cut3) %>% 
+   mutate(Expression = case_when(column_FC >= log2(1) & column_P <= 0.05 ~ "Up-regulated",
+                                 column_FC <= -log2(1 ) & column_P <= 0.05 ~ "Down-regulated",
+                                 TRUE ~ "Unchanged")) %>%
+   ggplot(aes(column_FC, -log(column_P,10))) +
+   geom_point(aes(color = Expression), size = 1) +
+   xlab(expression("log"[2]*"FC")) + 
+   ylab(expression("-log"[10]*"PValue")) +
+   scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+   guides(colour = guide_legend(override.aes = list(size=1.5))) +
+   theme_classic() +
+   theme(legend.position= 'none') +
+   labs(title = paste0("Maximum " ,  cut3, "Zero in  " , sample_type)) +
+   xlim( -7 , 7) + ylim( 0 , 5)
+ 
+ jpeg(here("graphs", "Volcanoplots" ,  paste0("Vocano_simple_graph_PValue" , sample_type , " " , region , " .jpg")) , width = 8000 , height = 5000  , res = 600)
+ 
+ grid.arrange(p1 , p2 , p3 , p4 , top = paste(sample_type , " " ,  region) )
+ 
+ dev.off()
+                                         
+
+}
+
+Volcano_Zero(Lithium_DPseq_model_FAS_Zero_counts_Gene , column_0 = Lithium_DPseq_model_FAS_Zero_counts_Gene$Control_Amygdala  , 
+             column_FC = Lithium_DPseq_model_FAS_Zero_counts_Gene$logFC_Amygdala , 
+             column_P = Lithium_DPseq_model_FAS_Zero_counts_Gene$P.Value_Amygdala , 
+             sample_type = "Control" , region = "Amygdala"  , cut1 = 0  , cut2 = 3 , cut3 = 10 )
+
+   Lithium_DPseq_model_FAS_Zero_counts_Gene %>% 
+                                           dplyr::filter(Control_sACC > 15) %>% 
+                                           mutate(Expression = case_when(logFC_sACC >= log2(1) & P.Value_sACC <= 0.05 ~ "Up-regulated",
+                                                                         logFC_sACC <= -log2(1 ) & P.Value_sACC <= 0.05 ~ "Down-regulated",
+                                                                         TRUE ~ "Unchanged")) %>%
+                                           ggplot(aes(logFC_sACC, -log(P.Value_sACC,10))) +
+                                           geom_point(aes(color = Expression), size = 1) +
+                                           xlab(expression("log"[2]*"FC")) + 
+                                           ylab(expression("-log"[10]*"PValue")) +
+                                           scale_color_manual(values = c("dodgerblue3", "gray50", "firebrick3")) +
+                                           guides(colour = guide_legend(override.aes = list(size=1.5))) +
+                                           theme_classic() +
+                                           theme(legend.position= 'none') 
+                                         
+                                         ggsave( paste0(out_path, "/Vocano_simple_graph_PValue." , output_type) , width = width  , height = height ,  units = "in", dpi = 600)
+                                         
+  volcanoplot_fn(data , Genes = data$Id , logFC = data$logFC_Amygdala , PValue = data$P.Value_Amygdala,
+                 FDR = data$adj.P.Val_Amygdala , FDR_based = F , output_type = "JPEG" , 
+                 topgenes_graph = F , legendposition = 'none' , simple_graph = T  )
+
+### Compare Zeros in samples ####
+
+col_ids_0_sACC <-  sACC_info %>% dplyr::filter(lithium_group == 0) %>% pull(1) 
+col_ids_1_sACC <-  sACC_info %>% dplyr::filter(lithium_group == 1) %>% pull(1) 
+
+col_ids_0_Amyg <-  Amyg_info %>% dplyr::filter(lithium_group == 0) %>% pull(1) 
+col_ids_1_Amyg <-  Amyg_info %>% dplyr::filter(lithium_group == 1) %>% pull(1) 
+
+
+Zero_counts <- function(df_info, count , outdf , logFC_tr ,  Freq_tr , graph_w , graph_h , region , type) {
+  
+  col_ids_0 <-  df_info %>% dplyr::filter(lithium_group == 0) %>% pull(1) 
+  col_ids_1 <-  df_info %>% dplyr::filter(lithium_group == 1) %>% pull(1)
+  
+  
+  Count_0_0 <-  count[ , col_ids_0] %>%rowCounts(useNames = T, value = 0) %>% enframe( name = "Id" , value = "Exposure") 
+  
+  Count_0_1 <-  count[ , col_ids_1]  %>%rowCounts(useNames = T, value = 0) %>% enframe(name = "Id" ,value = "Control") 
+  
+  Count_0_All <-  count %>% rowCounts(useNames = T, value = 0) %>% enframe(name = "Id" ,value = "All") 
+  
+  outdf <-  outdf %>% as.data.frame() %>% rownames_to_column("Id") %>%  dplyr::select(c("Id" , logFC)) 
+  
+  df_list <- list(Count_0_0, Count_0_1, Count_0_All , outdf)      
+  
+  outdf_ready <-  df_list %>% reduce(full_join, by='Id') %>% pivot_longer(cols = Exposure:All , names_to = "Group" , values_to = "Frequency")
+  
+  cols <- c("#1170AA", "#55AD89", "#EF6F6A")
+  
+  graph1 <-  outdf_ready %>% dplyr::filter(abs(logFC) >= logFC_tr & Frequency >= Freq_tr) %>% 
+    ggplot( aes(x= Id )) +
+    geom_point( aes(y=abs(logFC) ,  color = "#1170AA")) + coord_flip() + theme_light() + theme(legend.position = 'none')+
+    xlab("Id") + ylab("|logFC|")
+  
+  graph2 <-  outdf_ready %>% dplyr::filter(abs(logFC) >= logFC_tr & Frequency >= Freq_tr) %>% 
+    ggplot( aes(x= Id , y=Frequency, color = Group , shape = Group)) +
+    geom_point(position = "jitter")+  coord_flip() + theme_light() + theme(axis.title.y=element_blank(),
+                                                                           axis.text.y=element_blank(),
+                                                                           axis.ticks.y=element_blank() ) 
+  
+  pdf(here("graphs", "Zero_counts" ,  paste0("FC vs. Zero frequency in lithium study ", region , " "  , type ,  " .pdf")) , width = graph_w , height = graph_h)
+  
+  grid.arrange(graph1 , graph2 , nrow=1 , top = paste(type , " " , region) , layout_matrix = rbind(c(1, 2, 2),
+                                                                                                   c(1, 2, 2))) 
+  
+  dev.off()
+  
+}
+
+Zero_counts(sACC_info, Gcount_sACC , outGene_sACC , 3 , 3 ,graph_w = 9 , graph_h = 12,  region = "sACC" , type = "Gene" )
+Zero_counts(Amyg_info, Gcount_Amyg , outGene_Amyg , 3 , 3 ,graph_w = 9 , graph_h = 12,  region = "Amygdala" , type = "Gene" )
+
+Zero_counts(sACC_info, Ecount_sACC , outExon_sACC , 3.5 , 5 ,graph_w = 9 , graph_h = 120,  region = "sACC" , type = "Exon" )
+Zero_counts(Amyg_info, Ecount_Amyg , outExon_Amyg , 3.5 , 5 ,graph_w = 9 , graph_h = 120,  region = "Amygdala" , type = "Exon" )
+
+Zero_counts(sACC_info, Jcount_sACC , outJxn_sACC , 4 , 5 ,graph_w = 9 , graph_h = 120,  region = "sACC" , type = "Junction" )
+Zero_counts(Amyg_info, Jcount_Amyg , outJxn_Amyg , 4 , 5 ,graph_w = 9 , graph_h = 120,  region = "Amygdala" , type = "Junction" )
+
+
+Zero_counts(sACC_info, Tcount_sACC , outTx_sACC , 3 , 3 ,graph_w = 9 , graph_h = 6,  region = "sACC" , type = "Transcript" )
+Zero_counts(Amyg_info, Tcount_Amyg , outTx_Amyg , 3 , 3 ,graph_w = 9 , graph_h = 6,  region = "Amygdala" , type = "Transcript" )
+### Enrichment ####
+
+rm(list= ls())
+
+setwd("D:/BPseq_data/Old")
+
+here::i_am("Lithium Bipseq code_Bipseq data DPseq_model.R")
+
+
+load("Lithium results.RDS")
+
+map_depth(Outlist, 2, nrow)
+
+## Define Universe
+all_gencode <- map_depth(Outlist, 2, "common_gene_id")
+map_depth(all_gencode, 2, length)
+head(all_gencode$gene$Amygdala)
+
+
+length(unlist(all_gencode))
+# [1] 1522730
+
+## all ENSEMBL
+all_ensembl <- unique(ss(unlist(all_gencode),"\\."))
+length(all_ensembl)
+# [1] 33932
+
+all_entrez <- bitr(all_ensembl, fromType = "ENSEMBL", toType ="ENTREZID", OrgDb="org.Hs.eg.db")
+# 31.02% of input gene IDs are fail to map...
+nrow(all_entrez)
+# [1] 23577
+u <- all_entrez$ENTREZ
+
+#### Functions for extracting gene sets ####
+get_signif <- function(outFeature, colname = "common_feature_id", cutoff = 0.005, return_unique = FALSE){
+  signif <- outFeature[[colname]][outFeature$P.Value < cutoff]
+  if(return_unique) signif <- unique(signif)
+  signif <- signif[!is.na(signif)]
+  return(signif)
+}
+
+my_flatten <- function (x, use.names = TRUE, classes = "ANY") {
+  #' Source taken from rlist::list.flatten
+  len <- sum(rapply(x, function(x) 1L, classes = classes))
+  y <- vector("list", len)
+  i <- 0L
+  items <- rapply(x, function(x) {
+    i <<- i + 1L
+    y[[i]] <<- x
+    TRUE
+  }, classes = classes)
+  if (use.names && !is.null(nm <- names(items))) 
+    names(y) <- nm
+  y
+}
+
+my_get_entrez <- function(g){
+  e <- unique(ss(g, "\\."))
+  entrez <- bitr(e, fromType = "ENSEMBL", toType ="ENTREZID", OrgDb="org.Hs.eg.db")
+  return(entrez$ENTREZ)
+}
+
+#### Get signif genes####
+signif_genes <- map_depth(Outlist, 2, ~get_signif(.x, colname = "common_gene_id", return_unique = TRUE))
+map_depth(signif_genes, 2, length)
+
+
+#### Combine All Features ####
+## transpose and flatten so features are combined
+
+signif_genes_af <- transpose(signif_genes)
+
+
+names(signif_genes_af$Amygdala)
+
+
+signif_genes_af_flat <- my_flatten(map_depth(signif_genes_af, 2, unlist))
+map_int(signif_genes_af_flat, length)
+# Amygdala.gene Amygdala.exon  Amygdala.jxn   Amygdala.tx     sACC.gene     sACC.exon      sACC.jxn       sACC.tx 
+# 249           1014           1675           287             52            526            1019           320 
+
+## Extract unique and convert to entrez
+gene_sets_af <- map(signif_genes_af_flat, my_get_entrez)
+
+# 1: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   4.02% of input gene IDs are fail to map...
+# 2: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   8.88% of input gene IDs are fail to map...
+# 3: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   7.59% of input gene IDs are fail to map...
+# 4: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   16.72% of input gene IDs are fail to map...
+# 5: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   26.92% of input gene IDs are fail to map...
+# 6: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   9.51% of input gene IDs are fail to map...
+# 7: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   8.87% of input gene IDs are fail to map...
+# 8: In bitr(e, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db") :
+#   10.94% of input gene IDs are fail to map...
+
+map_int(gene_sets_af, length)
+# Amygdala.gene Amygdala.exon  Amygdala.jxn   Amygdala.tx     sACC.gene     sACC.exon      sACC.jxn       sACC.tx 
+# 243            930            1551           241            38           484              937            286 
+
+
+t(rbind(map_dfr(signif_genes_af_flat, length), map_dfr(gene_sets_af, length)))
+
+
+#               [,1] [,2]
+# Amygdala.gene  249  243
+# Amygdala.exon 1014  930
+# Amygdala.jxn  1675 1551
+# Amygdala.tx    287  241
+# sACC.gene       52   38
+# sACC.exon      526  484
+# sACC.jxn      1019  937
+# sACC.tx        320  286
+
+
+str(gene_sets_af)
+# List of 8
+# $ Amygdala.gene: chr [1:243] "7133" "712" "714" "713" ...
+# $ Amygdala.exon: chr [1:930] "54587" "728661" "8764" "6518" ...
+# $ Amygdala.jxn : chr [1:1551] "83858" "8764" "27237" "5293" ...
+# $ Amygdala.tx  : chr [1:241] "473" "4681" "100532736" "712" ...
+# $ sACC.gene    : chr [1:38] "149563" "100130630" "6566" "107985216" ...
+# $ sACC.exon    : chr [1:484] "8718" "473" "57540" "374946" ...
+# $ sACC.jxn     : chr [1:937] "100288175" "83858" "5590" "8514" ...
+# $ sACC.tx      : chr [1:286] "55052" "6146" "113452" "106479825" ...
+
+
+#### Run Enrichment ####
+
+names(gene_sets_af)
+# 
+# [1] "Amygdala.gene" "Amygdala.exon" "Amygdala.jxn"  "Amygdala.tx"   "sACC.gene"     "sACC.exon"    
+# [7] "sACC.jxn"      "sACC.tx" 
+
+# BP_All <-  map(gene_sets_af , ~enrichGO(.x,
+#                                    universe = u, OrgDb = org.Hs.eg.db,
+#                                    ont = "BP", pAdjustMethod = "BH",
+#                                    pvalueCutoff  = .2, qvalueCutoff  = .5,
+#                                    readable= TRUE)   )
+# 
+# names(BP_All)
+# 
+# lengths(test)
+
+plan <- tidyr::expand_grid(
+  gene_list = gene_sets_af,
+  ontology = ont
+)
+
+Enrichment_results <-  map2(plan$gene_list , plan$ontology,  ~enrichGO(.x,
+                                        universe = u, OrgDb = org.Hs.eg.db,
+                                        ont = .y , pAdjustMethod = "BH",
+                                        pvalueCutoff  = .2, qvalueCutoff  = .5,
+                                        readable= TRUE)   )
+
+names(Enrichment_results) <- c(paste0(names(Enrichment_results), "_", rep(ont)))
+
+class(Enrichment_results)
+
+
+gene_set_numbers <-  map_int(Enrichment_results, nrow)
+
+to_remove <-  which(gene_set_numbers == 0)
+
+Enrichment_results <-  Enrichment_results[-(c(to_remove))]
+
+
+pdf("Enrichment results Lithium exposure.pdf" , height = 12 , width = 7)
+
+map2(Enrichment_results, names(Enrichment_results), ~dotplot(.x, title = .y , showCategory = 25))
+
+dev.off()
+
+
+# 
+#  
+# # "Amygdala.gene" "Amygdala.exon" "Amygdala.jxn"  "Amygdala.tx"   "sACC.gene"     "sACC.exon"     "sACC.jxn"      "sACC.tx"
+# 
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[1] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[1]]) 
+#   dev.off()
+#   
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[2] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[2]]) 
+#   dev.off()
+# 
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[3] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[3]]) 
+#   dev.off()
+#   
+#   
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[4] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[4]]) 
+#   dev.off()
+#   
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[5] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[5]]) 
+#   dev.off()
+#   
+#   # pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[6] , ".pdf") , width = 9 , height = 9)
+#   # dotplot((BP_All)[[6]]) 
+#   # dev.off() # there is no result
+#   
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[7] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[7]]) 
+#   dev.off()
+#   
+#   
+#   pdf(paste0("BP_Enrichment_Dotplot_" , names(BP_All)[8] , ".pdf") , width = 9 , height = 9)
+#   dotplot((BP_All)[[8]]) 
+#   dev.off()
+#   
+# 
+#   goplot((BP_All)[[8]])
+#   
+# enrichGO_af_simplify = map(BP_All, ~clusterProfiler::simplify((.x), cutoff=0.5, by="qvalue", select_fun=min))
+# 
+# write.csv(enrichGO_af$BP@compareClusterResult, file = "Lithium_go_BP_4_4_2024.csv")
+# write.csv(enrichGO_af$MF@compareClusterResult, file = "Lithium_go_MF_4_4_2024.csv")
+# write.csv(enrichGO_af$CC@compareClusterResult, file = "Lithium_go_CC_4_4_2024.csv")
+# write.csv(enrichGO_af$ALL@compareClusterResult, file = "Lithium_go_All_4_4_2024.csv")
+# 
+# id <-  which(enrichGO_af$BP@compareClusterResult$Cluster == "Amygdala.gene")
+# dotplot(enrichGO_af$BP)[id]
+# 
+# # clusterProfiler      * 4.2.0    2021-10-26 [1] Bioconductor
+# KEGG_DATA <- clusterProfiler:::get_data_from_KEGG_db("hsa")
+# 
+# 
+# enrichKEGG = compareCluster(geneClusters = gene_sets_af, 
+#                             universe = u,
+#                             organism = "hsa",
+#                             fun = "enrichKEGG")
+# 
+# k = enrichKEGG(gene_sets_af, species = 'hsa')
+# 
+# 
+# #### save Dotplots ####
+# pdf(file = "enrichGO_dotplots.pdf")
+# test <-  walk2(enrichGO_af, names(enrichGO_af), ~dotplot(.x, title = .y))
+# dev.off()
+# 
+# pdf(file = here("differential_expression", "plots","enrichGO_dotplots_specific.pdf"))
+# walk2(enrichGO_sf, names(enrichGO_sf), ~dotplot(.x, title = .y))
+# dev.off()
+# 
+# pdf(file = here("differential_expression", "plots","enrichKEGG_dotplots_all.pdf"))
+# dotplot(enrichKEGG, title = "enrichKEGG")
+# dev.off()
+# 
+# 
+# walk2(enrichGO, names(enrichGO), function(go_data, name){
+#   dp <- dotplot(go_data, name)
+#   ggsave(dp, filename = here("differential_expression", "plots", paste0("enrichGO_dotplots_",name,".png")))
+# })
+# 
+# 
+# # 
+# save(enrichGO_af, enrichGO_sf, file = here("differential_expression", "data", "enrichGO.rda"))
+# ## Added by Fernando
+# # write.csv(go, file = here("differential_expression", "data", "go_ontALL.csv"))
+# 
+# 
+# 
+# session_info()
+# 
+# 
+# 
+# 
+# 
+# enrichGO_af2 <-  enrichGO_af
+# 
+# enrichGO_af2$BP@compareClusterResult$Cluster <-  unfactor(enrichGO_af2$BP@compareClusterResult$Cluster)
+# 
+# glimpse(enrichGO_af2)
+# 
+# test <-  pairwise_termsim(enrichGO_af$BP)
+# 
+# emapplot(test)
+# 
+# Bp_results <-  enrichGO_af$BP@compareClusterResult
+# 
+# 
+# Bp_results$Cluster <-  unfactor(Bp_results$Cluster)
+# 
+# Bp_results %>% dplyr::filter(Cluster == "Amygdala.gene") %>%  pairwise_termsim()
+# 
+# unique(enrichGO_af$BP@compareClusterResult$Cluster)

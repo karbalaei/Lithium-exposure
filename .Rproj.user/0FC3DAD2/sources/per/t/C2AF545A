@@ -1,0 +1,28 @@
+{
+    "id": "C2AF545A",
+    "path": "D:/BPseq_data/Lithium_project/analyze_results_bipolar.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1577042744",
+    "contents": "",
+    "dirty": false,
+    "created": 1718043418708.0,
+    "source_on_save": false,
+    "relative_order": 25,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "80,0",
+        "scrollLine": "56",
+        "docOutlineVisible": "1",
+        "docOutlineSize": "369"
+    },
+    "folds": "285|43|342|0|\n",
+    "lastKnownWriteTime": 1718643571,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1718643571912,
+    "read_only": false,
+    "read_only_alternatives": []
+}

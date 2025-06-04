@@ -1,0 +1,725 @@
+### Compare BPseq and DPseq models results #####
+rm(list= ls())
+
+library(here)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(gridExtra)
+
+
+here()
+#setwd("d:/BPseq_data/Old/")
+
+here::i_am("Compare_models_functiuons.R")
+
+
+Lithium_BPseqmodel_gene <- read_csv(here("model_results" , "Lithium_BPseq_model_gene.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_gene <- read_csv(here("model_results" , "Lithium_DPseq_model_gene.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_NAS_gene <- read_csv(here("model_results" , "Lithium_DPseq_model_NAS_gene.csv")) %>% dplyr::rename(Id = ...1)
+
+
+Lithium_BPseqmodel_exon <- read_csv(here("model_results" , "Lithium_BPseq_model_exon.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_exon <- read_csv(here("model_results" , "Lithium_DPseq_model_exon.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_NAS_exon <- read_csv(here("model_results" , "Lithium_DPseq_model_NAS_exon.csv")) %>% dplyr::rename(Id = ...1)
+
+Lithium_BPseqmodel_Jxn <- read_csv(here("model_results" , "Lithium_BPseq_model_Jxn.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_Jxn <- read_csv(here("model_results" , "Lithium_DPseq_model_Jxn.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_NAS_Jxn <- read_csv(here("model_results" , "Lithium_DPseq_model_NAS_Jxn.csv")) %>% dplyr::rename(Id = ...1)
+
+
+Lithium_BPseqmodel_Transcript <- read_csv(here("model_results" , "Lithium_BPseq_model_Transcript.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_Transcript <- read_csv(here("model_results" , "Lithium_DPseq_model_Transcript.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_DPseqmodel_NAS_Transcript <- read_csv(here("model_results" , "Lithium_DPseq_model_NAS_Transcript.csv")) %>% dplyr::rename(Id = ...1)
+
+
+BPseqdata_BPseqmodel_gene <- read_csv(here("BP_results" , "BPseqdata_BPseq_model_gene.csv")) %>% dplyr::rename(Id = ...1)
+BPseqdata_DPseqmodel_gene <- read_csv(here("BP_results" , "BPseqdata_DPseq_model_gene.csv")) %>% dplyr::rename(Id = ...1) 
+
+
+colnames(BPseqdata_BPseqmodel_gene) <-   colnames(BPseqdata_BPseqmodel_gene) %>% str_replace_all("_Amyg" , "_Amygdala")
+colnames(BPseqdata_DPseqmodel_gene) <-   colnames(BPseqdata_DPseqmodel_gene) %>% str_replace_all("_Amyg" , "_Amygdala")
+
+
+
+df1 = Lithium_DPseqmodel_NAS_gene
+df2 = Lithium_DPseqmodel_gene
+
+type="Gene"
+
+model1= "DPseqmodel_NAS"
+model2= "DPseqmodel"
+
+pvalue= 0.005
+
+knitr_table <- function(x) {
+  x %>% 
+    knitr::kable(format = "html", digits = Inf, 
+                 format.args = list(big.mark = ",")) %>%
+    kableExtra::kable_styling(font_size = 15)
+}
+
+scale_fill_Reza <- function(...){
+  ggplot2:::manual_scale(
+    'color', 
+    values = setNames(c('#e41a1c', '#377eb8', '#984ea3', '#4daf4a'), c("DEp1", "No DEp1","DEp2", "No DEp2" )), 
+    ...
+  )
+}
+
+scale_fill_chris <- function(...){
+  ggplot2:::manual_scale(
+    'color', 
+    values = setNames(c('green', 'blue', 'red', 'orange'), LETTERS[1:4]), 
+    ...
+  )
+}
+
+
+
+Compare_parameters <-  function(df1 , df2, type , extra_info = "") {
+  
+  df1 <-  df1 %>% 
+    dplyr::mutate("Amygdala_DEp" =  factor(if_else(adj.P.Val_Amygdala < 0.05 , "DEp1" , "No DEp1")), 
+                  "sACC_DEp" = factor(if_else(adj.P.Val_sACC < 0.05 , "DEp1" , "No DEp1")),
+                  "Ext_FC_Amygdala" = factor(if_else( abs (logFC_Amygdala) > 3 , "Extrem FC1" ,"Normal FC1")), 
+                  "Ext_FC_sACC" = factor(if_else( abs (logFC_sACC) > 3 , "Extrem FC1" ,"Normal FC1")))
+  
+  
+  df2 <-  df2 %>% 
+    dplyr::mutate("Amygdala_DEp" = factor(if_else(adj.P.Val_Amygdala < 0.05 , "DEp2" , "No DEp2")), 
+                  "sACC_DEp" = factor(if_else(adj.P.Val_sACC < 0.05 , "DEp2" , "No DEp2")),
+                  "Ext_FC_Amygdala" = factor(if_else( abs (logFC_Amygdala) > 3 , "Extrem FC2" ,"Normal FC2")), 
+                  "Ext_FC_sACC" = factor(if_else( abs (logFC_sACC) > 3 , "Extrem FC2" ,"Normal FC2")))
+  
+  p1 <- df1%>%
+    ggplot(aes(-log10(P.Value_Amygdala) , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="Amygdala, BP model, highlighting DEp",
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none")+
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1) 
+  
+  
+  p2 <- df2%>%
+    ggplot(aes(-log10(P.Value_Amygdala) , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="Amygdala, DP model, highlighting DEp",
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  
+  p3 <- df1%>%
+    ggplot(aes(logFC_Amygdala , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="Amygdala, BP model, highlighting DEp",
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  p4 <- df2%>%
+    ggplot(aes(logFC_Amygdala , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="Amygdala, DP model, highlighting DEp",
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  jpeg(here("graphs", "t_stat" ,  paste0("Scatter plot comparing t stat vs. FC or -log10 pvalue from BP model  and DP model on Amygdala region " , type , extra_info ,  " .jpg")) , width = 7000 , height = 5000  , res = 600)
+  
+  grid.arrange(p1,p2 , p3 , p4 , top = paste(type , "Amygdala") , bottom = "Comaparing BP and DP model")
+  
+  dev.off()
+  
+  
+  p5 <- df1%>%
+    ggplot(aes(-log10(P.Value_sACC) , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="sACC, BP model, highlighting DEp",
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none")+
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  p6 <- df2%>%
+    ggplot(aes(-log10(P.Value_sACC) , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="sACC, DP model, highlighting DEp",
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  
+  p7 <- df1%>%
+    ggplot(aes(logFC_sACC , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="sACC, BP model, highlighting DEp",
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  p8 <- df2%>%
+    ggplot(aes(logFC_sACC , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_classic()+
+    scale_fill_Reza() +
+    labs(subtitle ="sACC, DP model, highlighting DEp",
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  jpeg(here("graphs", "t_stat" ,  paste0("Scatter plot comparing t stat vs. FC or -log10 pvalue from BP model  and DP model on sACC region " , type , extra_info ,   " .jpg")) , width = 7000 , height = 5000  , res = 600)
+  
+  grid.arrange(p5,p6 , p7 , p8 , top = paste(type , "sACC") , bottom = "Comaparing BP and DP model")
+  
+  dev.off()
+  
+  
+  
+  
+}
+
+Compare_parameters_pvalue <-  function(df1 , df2, type , pvalue, model1 , model2 , extra_info = "") {
+  
+  df1 <-  df1 %>% 
+    dplyr::mutate("Amygdala_DEp" =  factor(if_else(P.Value_Amygdala < pvalue , "DEp1" , "No DEp1")), 
+                  "sACC_DEp" = factor(if_else(P.Value_sACC < pvalue , "DEp1" , "No DEp1")),
+                  "Ext_FC_Amygdala" = factor(if_else( abs (logFC_Amygdala) > 3 , "Extrem FC1" ,"Normal FC1")), 
+                  "Ext_FC_sACC" = factor(if_else( abs (logFC_sACC) > 3 , "Extrem FC1" ,"Normal FC1")))
+  
+  
+  df2 <-  df2 %>% 
+    dplyr::mutate("Amygdala_DEp" = factor(if_else(P.Value_Amygdala < pvalue , "DEp2" , "No DEp2")), 
+                  "sACC_DEp" = factor(if_else(P.Value_sACC < pvalue , "DEp2" , "No DEp2")),
+                  "Ext_FC_Amygdala" = factor(if_else( abs (logFC_Amygdala) > 3 , "Extrem FC2" ,"Normal FC2")), 
+                  "Ext_FC_sACC" = factor(if_else( abs (logFC_sACC) > 3 , "Extrem FC2" ,"Normal FC2")))
+  
+  
+  table(df1$Amygdala_DEp) %>% 
+    knitr_table()
+  
+  
+    table(df2$Amygdala_DEp) %>% 
+    knitr_table()
+  
+  
+  p1 <- df1%>%
+    ggplot(aes(-log10(P.Value_Amygdala) , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("Amygdala, ", model1 , " highlighting DEp"),
+         x =expression("-log"[10]*"p-value"), y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none")+
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1) 
+  
+  
+  p2 <- df2%>%
+    ggplot(aes(-log10(P.Value_Amygdala) , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("Amygdala, ", model2 , " highlighting DEp"),
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  
+  p3 <- df1%>%
+    ggplot(aes(logFC_Amygdala , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("Amygdala, ", model1 , " highlighting DEp"),
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  p4 <- df2%>%
+    ggplot(aes(logFC_Amygdala , t_Amygdala , color = Amygdala_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("Amygdala, ", model2 , " highlighting DEp"),
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  jpeg(here("graphs", "t_stat" ,  paste0("Scatter plot comparing t stat vs. FC or -log10 pvalue from " ,model1, " and " , model2 ," on Amygdala region " , type , extra_info ,  " .jpg")) , width = 7000 , height = 5000  , res = 600)
+  
+  grid.arrange(p1,p2 , p3 , p4 , top = paste(type , "Amygdala") , bottom = "Comaparing BP and DP model")
+  
+  dev.off()
+  
+  
+  p5 <- df1%>%
+    ggplot(aes(-log10(P.Value_sACC) , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("sACC, ", model1 , " highlighting DEp"),
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none")+
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  p6 <- df2%>%
+    ggplot(aes(-log10(P.Value_sACC) , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("sACC, ", model2 , " highlighting DEp"),
+         x ="-log10 p-value", y = "t stat") +
+    scale_x_continuous(breaks = seq(0,12,2), limits=c(0, 12)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(4 , 6), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  
+  p7 <- df1%>%
+    ggplot(aes(logFC_sACC , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("sACC, ", model1 , " highlighting DEp"),
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15) +
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  p8 <- df2%>%
+    ggplot(aes(logFC_sACC , t_sACC , color = sACC_DEp )) +
+    geom_point(alpha = 0.7) +
+    theme_bw()+
+    scale_fill_Reza() +
+    labs(subtitle = paste0("sACC, ", model2 , " highlighting DEp"),
+         x ="logFC", y = "t stat") +
+    scale_x_continuous(breaks = seq(-10,10,2), limits=c(-10, 10)) +
+    ylim(-15 , 15)+
+    theme(legend.position = "none") +
+    geom_vline(xintercept = c(-3 , 3), linetype="dotted", 
+               color = "grey", linewidth=1)
+  
+  jpeg(here("graphs", "t_stat" ,  paste0("Scatter plot comparing t stat vs. FC or -log10 pvalue from " ,model1, " and " , model2 , " on sACC region " , type , extra_info ,   " .jpg")) , width = 7000 , height = 5000  , res = 600)
+  
+  grid.arrange(p5,p6 , p7 , p8 , top = paste(type , "sACC") , bottom = "Comaparing BP and DP model")
+  
+  dev.off()
+  
+  
+  
+  
+}
+
+
+Compare_df <-  function(df1 ,  df2,  type ) {
+  
+  df1 <-  df1 %>% dplyr::select(c(Id , "t_Amygdala" , "adj.P.Val_Amygdala" , "logFC_Amygdala" ,"t_sACC",  "adj.P.Val_sACC" , "logFC_sACC" ))
+  df2 <-  df2 %>% dplyr::select(c(Id , "t_Amygdala" , "adj.P.Val_Amygdala" , "logFC_Amygdala" , "t_sACC",  "adj.P.Val_sACC" , "logFC_sACC" ))
+  
+  Main_df <-  df1 %>% inner_join(df2 , by = "Id") 
+  
+  colnames(Main_df) <-  colnames(Main_df) %>% str_replace_all("\\.x" , "\\.BP") %>% str_replace_all("\\.y" , "\\.DP")
+  
+  Amygdala_df <-  Main_df %>% 
+    dplyr::select(c(1 , contains("Amygdala"))) %>%
+    dplyr::mutate("DEp" = if_else( (adj.P.Val_Amygdala.DP < 0.05  &  adj.P.Val_Amygdala.BP < 0.05 ), "Both Model" ,
+                                   if_else( (adj.P.Val_Amygdala.DP < 0.05  &  adj.P.Val_Amygdala.BP >= 0.05 ), "DP model" ,
+                                            if_else( (adj.P.Val_Amygdala.DP >= 0.05  &  adj.P.Val_Amygdala.BP < 0.05 ), "BP model" , "None" ))))%>%
+    dplyr::mutate("Ext_FC" = if_else( (abs (logFC_Amygdala.DP) > 3  &  abs(logFC_Amygdala.BP) > 3) , "Both Model" ,
+                                      if_else( (abs (logFC_Amygdala.DP) > 3  &  abs (logFC_Amygdala.BP) <= 3 ), "DP model" ,
+                                               if_else( (abs (logFC_Amygdala.DP) <= 3 &  abs (logFC_Amygdala.BP) > 3 ), "BP model" , "None" ))))
+  
+  
+  sACC_df <-  Main_df %>% 
+    dplyr::select(c(1 , contains("sACC"))) %>% 
+    dplyr::mutate("DEp" = if_else( (adj.P.Val_sACC.DP < 0.05  &  adj.P.Val_sACC.BP < 0.05 ), "Both Model" ,
+                                   if_else( (adj.P.Val_sACC.DP < 0.05  &  adj.P.Val_sACC.BP >= 0.05 ), "DP model" ,
+                                            if_else( (adj.P.Val_sACC.DP >= 0.05  &  adj.P.Val_sACC.BP < 0.05 ), "BP model" , "None" )))) %>%
+    dplyr::mutate("Ext_FC" = if_else( (abs (logFC_sACC.DP) > 3  &  abs(logFC_sACC.BP) > 3) , "Both Model" ,
+                                      if_else( (abs (logFC_sACC.DP) > 3  &  abs (logFC_sACC.BP) <= 3 ), "DP model" ,
+                                               if_else( (abs (logFC_sACC.DP) <= 3 &  abs (logFC_sACC.BP) > 3 ), "BP model" , "None" ))))
+  
+  p1 <- Amygdala_df%>%
+    ggplot(aes(t_Amygdala.BP , t_Amygdala.DP , color = DEp )) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comapring T stat, highlighting DEp",
+         x ="t stat from BP model", y = "t stat from DP model") +
+    xlim(-15 , 15) +
+    ylim(-15 , 15)
+  
+  
+  p3 <-  Amygdala_df%>%
+    ggplot(aes(logFC_Amygdala.BP , logFC_Amygdala.DP , color = Ext_FC )) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comapring logFC, highlighting FC outliers",
+         x ="FC from BP model", y = "FC from DP model") +
+    xlim(-10 , 10) +
+    ylim(-10 , 10) 
+  
+  p2 <- Amygdala_df%>%
+    ggplot(aes(t_Amygdala.BP , t_Amygdala.DP , color =  Ext_FC)) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comparing T stat , highlighting FC outliers",
+         x ="t stat from BP model", y = "t stat from DP model") +
+    xlim(-15 , 15) +
+    ylim(-15 , 15)
+  
+  
+  p4 <-  Amygdala_df%>%
+    ggplot(aes(logFC_Amygdala.BP , logFC_Amygdala.DP , color = DEp )) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comapring logFC, highlighting DEp",
+         x ="FC from BP model", y = "FC from DP model") +
+    xlim(-10 , 10) +
+    ylim(-10 , 10) 
+  
+  
+  jpeg(here("graphs", "compare models" ,  paste0("Scatter plot comparing t stat and FC from BP model  and DP model on Amygdala region " , type ,  " .jpg")) , width = 7000 , height = 5000  , res = 600)
+  
+  grid.arrange(p1,p2 , p3 , p4 , top = paste(type , "Amygdala") , bottom = "Comaparing BP and DP model")
+  
+  dev.off()
+  
+  #ggsave( paste0("Scatter plot comparing t stat and FC from BP model  and DP model on Amygdala region " , type ,  " .jpg") , width = 8 , height = 8 )
+  
+  write.table(Amygdala_df , here("tables" , paste0("Amygdaladala_comparing_BP_DP_model " , type,  " .txt")) , row.names = T , sep = "\t")
+  
+  p1 <- sACC_df%>%
+    ggplot(aes(t_sACC.BP , t_sACC.DP , color = DEp )) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comapring T stat, highlighting DEp",
+         x ="t stat from BP model", y = "t stat from DP model") +
+    xlim(-15 , 15) +
+    ylim(-15 , 15)
+  
+  
+  p3 <-  sACC_df%>%
+    ggplot(aes(logFC_sACC.BP , logFC_sACC.DP , color = Ext_FC )) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comapring logFC, highlighting FC outliers",
+         x ="FC from BP model", y = "FC from DP model") +
+    xlim(-10 , 10) +
+    ylim(-10 , 10) 
+  
+  p2 <- sACC_df%>%
+    ggplot(aes(t_sACC.BP , t_sACC.DP , color =  Ext_FC)) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comparing T stat , highlighting FC outliers",
+         x ="t stat from BP model", y = "t stat from DP model") +
+    xlim(-15 , 15) +
+    ylim(-15 , 15)
+  
+  
+  p4 <-  sACC_df%>%
+    ggplot(aes(logFC_sACC.BP , logFC_sACC.DP , color = DEp )) +
+    geom_point(alpha = 0.5) +
+    theme_classic()+
+    scale_color_brewer(palette="Dark2") +
+    labs(subtitle ="Comapring logFC, highlighting DEp",
+         x ="FC from BP model", y = "FC from DP model") +
+    xlim(-10 , 10) +
+    ylim(-10 , 10) 
+  
+  jpeg(here("graphs", "compare models" ,paste0("Scatter plot comparing t stat and FC from BP model  and DP model on sACC region " , type ,  " .jpg")) , width = 7000 , height = 5000  , res = 600)
+  
+  grid.arrange(p1,p2 , p3 , p4 , top = paste(type , "sACC") , bottom = "Comaparing BP and DP model")
+  
+  dev.off()
+  
+  #ggsave( paste0("Scatter plot comparing t stat from BP model  and DP model on sACC region " , type ,  " .jpg") , width = 5 , height = 5)
+  
+  write.table(sACC_df ,  here("tables" , paste0("sACC_comparing_BP_BP_model " , type,  " .txt")) , row.names = T , sep = "\t")
+  
+  
+  
+}
+
+Compare_df(Lithium_BPseqmodel_gene , Lithium_DPseqmodel_gene , "Gene")
+Compare_df(Lithium_BPseqmodel_exon , Lithium_DPseqmodel_exon , "Exon")
+Compare_df(Lithium_BPseqmodel_Jxn , Lithium_DPseqmodel_Jxn , "Junction")
+Compare_df(Lithium_BPseqmodel_Transcript , Lithium_DPseqmodel_Transcript , "Transcript")
+
+Compare_parameters(Lithium_BPseqmodel_gene , Lithium_DPseqmodel_gene , "Gene")
+Compare_parameters(Lithium_BPseqmodel_exon , Lithium_DPseqmodel_exon , "Exon")
+Compare_parameters(Lithium_BPseqmodel_Jxn , Lithium_DPseqmodel_Jxn , "Junction")
+Compare_parameters(Lithium_BPseqmodel_Transcript , Lithium_DPseqmodel_Transcript , "Transcript")
+
+Compare_parameters(BPseqdata_BPseqmodel_gene , BPseqdata_DPseqmodel_gene , "Gene" , extra_info = " All_BPseq_data ")
+
+
+Compare_parameters_pvalue(Lithium_DPseqmodel_NAS_gene , Lithium_DPseqmodel_gene ,  type = "Gene" , pvalue = 0.005 , model1 = " DPseq NAS " , model2 = " DPseq" )
+Compare_parameters_pvalue(Lithium_DPseqmodel_NAS_exon , Lithium_DPseqmodel_exon ,  "Exon", pvalue = 0.005 , model1 = " DPseq NAS " , model2 = " DPseq" )
+Compare_parameters_pvalue(Lithium_DPseqmodel_NAS_Jxn , Lithium_DPseqmodel_Jxn , "Junction" , pvalue = 0.005 , model1 = " DPseq NAS " , model2 = " DPseq" )
+Compare_parameters_pvalue(Lithium_DPseqmodel_NAS_Transcript , Lithium_DPseqmodel_Transcript , "Transcript" , pvalue = 0.005 , model1 = " DPseq NAS " , model2 = " DPseq" )
+
+
+
+Gene_df <-  Lithium_DPseqmodel_gene %>% inner_join(Lithium_BPseqmodel_gene , by = "Id") 
+
+colnames(Gene_df) <-  colnames(Gene_df) %>% str_replace_all("\\.y" , "\\.BP") %>% str_replace_all("\\.x" , "\\.DP")
+
+Amygdala_gene_df <-  Gene_df %>% 
+  dplyr::select(c(1 , contains("Amyg"))) %>%
+  dplyr::mutate("Group" = if_else( (adj.P.Val_Amyg.DP < 0.05  &  adj.P.Val_Amyg.BP < 0.05 ), "Both Model" ,
+                                   if_else( (adj.P.Val_Amyg.DP < 0.05  &  adj.P.Val_Amyg.BP >= 0.05 ), "DP model" ,
+                                            if_else( (adj.P.Val_Amyg.DP >= 0.05  &  adj.P.Val_Amyg.BP < 0.05 ), "BP model" , "None" ))))
+
+
+sACC_gene_df <-  Gene_df %>% 
+  dplyr::select(c(1 , contains("sACC"))) %>% 
+  dplyr::mutate("Group" = if_else( (adj.P.Val_sACC.DP < 0.05  &  adj.P.Val_sACC.BP < 0.05 ), "Both Model" ,
+                                   if_else( (adj.P.Val_sACC.DP < 0.05  &  adj.P.Val_sACC.BP >= 0.05 ), "DP model" ,
+                                            if_else( (adj.P.Val_sACC.DP >= 0.05  &  adj.P.Val_sACC.BP < 0.05 ), "BP model" , "None" ))))
+
+
+
+
+write.table(Amygdala_gene_df_ready , "Amygdala_gene_dataframe_DP_BP_model.txt" , row.names = T , sep = "\t")
+
+pdf( paste0("Scatter plot comparing t stat from BP model  and DP model on Amygdala region" , type ,  ".pdf") , width = 6 , height = 6)
+
+Amygdala_gene_df%>%
+  ggplot(aes(t_Amyg.BP , t_Amyg.DP , color = Group )) +
+  geom_point(alpha = 0.5) +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2") +
+  labs(title="Gene" , subtitle ="Plot of comaparing T stat between BP and DP model",
+       x ="t stat from BP model", y = "t stat from DP model")
+xlab("t stat from DP model") + ylab("t stat from BP model") + 
+  xlim(-12 , 14) +
+  ylim(-12 , 14) +
+  
+  
+  
+  
+  
+  pdf("Histogram for pValues from DP model on Amygdala region (All).pdf" , width = 9 , height = 6)
+Amygdala_gene_df_ready%>%
+  ggplot(aes(P.Value_Amyg.DP )) +
+  geom_histogram(alpha=.8, bins=500 ,colour="black", fill="white") +
+  theme_classic() +
+  xlab("pValues from DP model on Amygdala region (All)") +
+  ylim(0 , 200)
+dev.off()
+
+
+pdf("Histogram for pValues from BP model on Amygdala region (All).pdf" , width = 9 , height = 6)
+Amygdala_gene_df_ready%>% 
+  ggplot(aes(P.Value_Amyg.BP )) +
+  geom_histogram(alpha=.8, bins=500 ,colour="black", fill="white") +
+  theme_classic() +
+  xlab("pValues from BP model on Amygdala region (All)") +
+  ylim(0 , 200)
+dev.off()
+
+pdf("Histogram for pValues from DP model on Amygdala region less than 0.1.pdf" , width = 9 , height = 6)
+Amygdala_gene_df_ready%>% dplyr::filter(P.Value_Amyg.DP < 0.1)%>% 
+  ggplot(aes(P.Value_Amyg.DP )) +
+  geom_histogram(alpha=.8, bins=100 ,colour="black", fill="white") +
+  theme_classic() +
+  xlab("pValues from DP model on Amygdala region (<0.1)") +
+  ylim(0 , 200)
+dev.off()
+
+pdf("Histogram for pValues from BP model on Amygdala region less than 0.1.pdf" , width = 9 , height = 6)
+Amygdala_gene_df_ready%>% dplyr::filter(P.Value_Amyg.BP < 0.1)%>% 
+  ggplot(aes(P.Value_Amyg.BP )) +
+  geom_histogram(alpha=.8, bins=100 ,colour="black", fill="white") +
+  theme_classic() +
+  xlab("pValues from BP model on Amygdala region (<0.1)") +
+  ylim(0 , 200)
+dev.off()
+
+Ready_for_Hist <-  Amygdala_gene_df_ready %>% dplyr::select(contains("P.Value_Amyg")) %>% 
+  pivot_longer(cols =P.Value_Amyg.DP:P.Value_Amyg.BP,  names_to = "Model" , values_to = "pValue") 
+
+Ready_for_Hist$Model <- str_remove_all(Ready_for_Hist$Model , "P.Value_Amyg.")
+
+pdf("Histogram for pValues from both BP and DP model on Amygdala region (All).pdf" , width = 9 , height = 6)
+
+ggplot(Ready_for_Hist, aes(x=pValue, color=Model)) +
+  geom_histogram(bins=500 , fill="white", alpha=0.5, position="identity")+
+  theme_classic() +
+  scale_color_brewer(palette="Dark2") 
+dev.off()
+
+
+pdf("Histogram for pValues from both BP and DP model on Amygdala region less than 0.1.pdf" , width = 9 , height = 6)
+
+Ready_for_Hist %>%   dplyr::filter(pValue < 0.01 )%>% 
+  ggplot( aes(x=pValue, color=Model)) +
+  geom_histogram(bins=30 , fill="white", alpha=0.7, position="identity")+
+  theme_classic() +
+  scale_color_brewer(palette="Dark2")
+
+dev.off()
+
+
+#+
+# scale_color_brewer(palette="Dark2") +
+# xlab("t stat from DP model") 
+#+ ylab("t stat from BP model") 
+# +
+#   xlim(-12 , 14) +
+#   ylim(-12 , 14)
+
+
+Amygdala_gene_df_ready%>%
+  dplyr::filter(DEGs_BP =="Yes")%>% 
+  # dplyr::filter(P.Value_Amyg.DP < 0.01 & P.Value_Amyg.BP < 0.01  )%>% 
+  ggplot(aes(P.Value_Amyg.DP , P.Value_Amyg.BP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2") +
+  xlim(0 , 0.005) +
+  ylim(0 , 0.005)
+
+Amygdala_gene_df_ready%>%
+  #dplyr::filter(DEGs_BP =="Yes")%>% 
+  dplyr::filter(P.Value_Amyg.DP < 0.001 | P.Value_Amyg.BP < 0.001  )%>% 
+  ggplot(aes(P.Value_Amyg.DP , P.Value_Amyg.BP , color = DEGs_BP )) +
+  geom_point(alpha = 1/10) +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+test2 <-  Amygdala_gene_df_ready%>%
+  #dplyr::filter(DEGs_BP =="Yes")%>% 
+  dplyr::filter(P.Value_Amyg.DP < 0.001 | P.Value_Amyg.BP < 0.001  )
+
+
+test2 %>%
+  #dplyr::filter(DEGs_BP =="Yes")%>% 
+  #dplyr::filter(P.Value_Amyg.DP < 0.001 | P.Value_Amyg.BP < 0.001  )%>% 
+  ggplot(aes(P.Value_Amyg.DP , P.Value_Amyg.BP , color = DEGs_BP )) +
+  geom_point(alpha = 2/10) +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+test2 %>%
+  # dplyr::mutate(DEGs_DP = if_else(DEGs_DP =="Yes" , 1 , 0 ),
+  #               DEGs_BP = if_else(DEGs_BP == "Yes" , 1 , 0  ),
+  #               DEGs_both = if_else((DEGs_DP == 1 & DEGs_BP == 1 ) , 1 , 0 )) %>%
+  #dplyr::filter(DEGs_BP =="Yes")%>% 
+  #dplyr::filter(P.Value_Amyg.DP < 0.001 | P.Value_Amyg.BP < 0.001  )%>% 
+  ggplot(aes(t_Amyg.DP, t_Amyg.BP , color = DEGs_BP )) +
+  geom_point(alpha = 5/10) +
+  geom_smooth(aes(group = as.factor(DEGs_BP) ) , method=lm ,  se=FALSE)+
+  theme_classic()+
+  scale_color_brewer(palette="Dark2") +
+  xlim(-12 , 14) +
+  ylim(-12 , 14)
+
+Amygdala_gene_df_ready%>%dplyr::filter(DEGs_BP =="Yes")%>% 
+  ggplot(aes(adj.P.Val_Amyg.DP , adj.P.Val_Amyg.BP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+hist(Amygdala_gene_df_ready$P.Value_Amyg.DP , breaks = 50 , ylim=c(0,800) )
+hist(Amygdala_gene_df_ready$P.Value_Amyg.BP , breaks = 50 , ylim=c(0,800) )
+
+
+Amygdala_gene_df_ready%>%
+  ggplot(aes(adj.P.Val_Amyg.DP , t_Amyg.DP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+Amygdala_gene_df_ready%>%
+  ggplot(aes(t_Amyg.DP , t_Amyg.BP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2") +
+  xlim(-12 , 14) +
+  ylim(-12 , 14)
+
+Amygdala_gene_df_ready%>%
+  ggplot(aes(adj.P.Val_Amyg.BP , t_Amyg.BP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+Amygdala_gene_df_ready%>%
+  ggplot(aes(P.Value_Amyg.DP , t_Amyg.DP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+
+Amygdala_gene_df_ready%>%
+  ggplot(aes(P.Value_Amyg.BP , t_Amyg.BP , color = DEGs_BP )) +
+  geom_point() +
+  theme_classic()+
+  scale_color_brewer(palette="Dark2")
+
+

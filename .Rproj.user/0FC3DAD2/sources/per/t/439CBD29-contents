@@ -1,0 +1,47 @@
+
+library("SummarizedExperiment")
+library("here")
+
+
+
+load(here::here("zandiHyde_bipolar_rnaseq"  , "data", "zandiHypde_bipolar_rseGene_n511.rda"))
+
+
+#### load lithium exposure ####
+
+drug_info = read.delim(here::here("Lithium_project" , "lithium","drug_info.csv"),as.is=TRUE , sep = ",")
+
+
+rse_gene$lithium = drug_info$lithium[match(rse_gene$BrNum, drug_info$BrNum)]
+rse_gene$lifetime_lithium = drug_info$life_lithium[match(rse_gene$BrNum, drug_info$BrNum)]
+rse_gene$lithium_group = NA
+rse_gene$lithium_group[which(rse_gene$lithium==1)] ="Lithium"
+rse_gene$lithium_group[which(rse_gene$lithium==0 & rse_gene$lifetime_lithium==0)] ="Control"
+rse_gene$lithium_group <-  factor(rse_gene$lithium_group)
+table(rse_gene$lithium_group , rse_gene$BrainRegion)
+
+# Amygdala sACC
+# 0       25   27
+# 1        9   10
+
+
+rse_gene_lithium <-  rse_gene[ , rse_gene$lithium_group %in% c("Control" , "Lithium")  ]
+
+rse_gene_lithium$lithium_group <-  factor(rse_gene_lithium$lithium_group)
+
+
+
+junc_paths <- gsub("accepted_hits.sorted.bam","junctions_primaryOnly_regtools.count", gsub("HISAT2_out","Counts/junction",
+                   gsub("dcl01/lieber/ajaffe/lab","dcs04/lieber/lcolladotor/hydeZandi_LIBD2005", rse_gene_lithium$bamFile)))
+
+
+head(junc_paths)
+
+length(junc_paths)
+# [1] 71
+
+all(file.exists(junc_paths))
+# [1] TRUE
+
+
+cat(junc_paths, file = here("Lithium_project" , "leafcutter","data","junc_count_files.txt"), sep = "\n")

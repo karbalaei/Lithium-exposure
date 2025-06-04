@@ -1,0 +1,81 @@
+rm(list= ls())
+
+
+library(limma)
+library(readxl)
+library(dplyr)
+library(stringr)
+library(RRHO2)
+library(here)
+library(readr)
+
+
+
+here()
+
+
+Lithium_gene <- read_csv(here("model_results" , "Lithium_DPseq_FAS_gene.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_exon <- read_csv(here("model_results" , "Lithium_DPseq_FAS_exon.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_Jxn <- read_csv(here("model_results" , "Lithium_DPseq_FAS_Jxn.csv")) %>% dplyr::rename(Id = ...1)
+Lithium_Transcript <- read_csv(here("model_results" , "Lithium_DPseq_FAS_Transcript.csv")) %>% dplyr::rename(Id = ...1)
+
+df <-  Lithium_gene
+
+Rank_Rank_Function <- function(df , type , stepsize_n) {
+  
+  df <-  df %>%
+    dplyr::mutate(Metric_Amygdala = if_else(logFC_Amygdala < 0 ,-log10(P.Value_Amygdala) , log10(P.Value_Amygdala) ) ,
+                  Metric_sACC = if_else(logFC_sACC < 0 , -log10(P.Value_sACC) , log10(P.Value_sACC) )) %>% as.data.frame()
+ 
+  RRHO_Combined_df <-  RRHO2_initialize (df[ , c("Id" , "Metric_Amygdala")], df[, c("Id" , "Metric_sACC" )] ,  labels = c("Amygdala" , "sACC") ,
+                                         stepsize = stepsize_n ,
+                                         log10.ind = T, multipleTesting = "none",
+                                         boundary = 0.01, method = "hyper"
+  )
+  
+  pdf(file= here("graphs", "RRHO2" ,  paste0("Rank Rank "  , type , ".pdf")) , width = 9 , height = 9 )
+  
+  
+  RRHO2_heatmap(RRHO_Combined_df)
+  
+  
+  dev.off()
+  
+  
+  pdf(file= here("graphs", "RRHO2" , paste0("Rank Rank " , type , "_dd.pdf")) , width = 9 , height = 9 )
+  
+  RRHO2_vennDiagram(RRHO_Combined_df ,type = "dd" )
+  
+  dev.off()
+  
+  
+  
+  pdf(file= here("graphs", "RRHO2" ,paste0("Rank Rank " , type , "_ud.pdf")) , width = 9 , height = 9 )
+  
+  RRHO2_vennDiagram(RRHO_Combined_df ,type = "ud" )
+  
+  dev.off()
+  
+  
+  
+  pdf(file= here("graphs", "RRHO2" ,paste0("Rank Rank " , type , "_uu.pdf")) , width = 9 , height = 9 )
+  
+  RRHO2_vennDiagram(RRHO_Combined_df ,type = "uu" )
+  
+  dev.off()
+  
+  pdf(file= here("graphs", "RRHO2" , paste0("Rank Rank " , type , "_du.pdf")) , width = 9 , height = 9 )
+  
+  RRHO2_vennDiagram(RRHO_Combined_df ,type = "du" )
+  
+  dev.off()
+  
+}
+
+Rank_Rank_Function(Lithium_gene , "Gene" , stepsize_n = 100)
+
+Rank_Rank_Function(Lithium_exon , "Exon" , 3000)
+
+Rank_Rank_Function(Lithium_Jxn , "Junction")
+
+Rank_Rank_Function(Lithium_Transcript , "Transcript")

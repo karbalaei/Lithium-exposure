@@ -1,0 +1,75 @@
+
+
+library(rrvgo)
+library(here)
+here::i_am("Revigo.R")
+
+
+load(file = here("enrichGO.rda"))
+
+to_remove <-  which(endsWith(names(Enrichment_results)   , "ALL"))
+
+Enrichment_results <-  Enrichment_results[-(c(to_remove))]
+
+
+nams_Enrichment_results <-  names(Enrichment_results) %>% str_split("_") %>%   map(., ~paste(.x, collapse = ",")) %>% 
+  unlist
+
+
+plan <-  read.csv(textConnection(nams_Enrichment_results), header = F , col.names = c("data" , "GO"))
+
+
+
+
+simMatrix_results <-  map2(Enrichment_results , plan$GO,  ~calculateSimMatrix(.x$ID, orgdb="org.Hs.eg.db",
+                                                                     ont=.y,method="Rel"  ) , .progress = T)
+
+
+scores_results <-  map(Enrichment_results , ~setNames(.x$qvalue,  .x$ID ) , .progress = T)
+
+
+reducedTerms_Rel_results <-  map2(simMatrix_results , scores_results ,  ~reduceSimMatrix(.x, .y ,  threshold=0.7,
+                                                                                      orgdb="org.Hs.eg.db") , .progress = T)
+
+
+#heatmaps
+
+
+heatmapPlot_Results <-  map2(simMatrix_results, reducedTerms_Rel_results, ~heatmapPlot(simMatrix = .x, reducedTerms = .y , annotateParent=TRUE,
+                                                   annotationLabel="parentTerm",
+                                                   fontsize=5))
+
+walk2(heatmapPlot_Results, names(heatmapPlot_Results), ~ggsave(.x, filename = here("graphs" , "Final_graphs", "Revigo" , "heatmapPlot" ,  paste0("Revigo_heatmap_Rel_",.y," .jpg")),  height =  9 ,  width = 12))
+
+
+
+# treemaps
+
+pdf(here("graphs" , "Final_graphs", "Revigo" , "treemapPlot" ,  paste0("Revigo_treemapPlot_Rel.pdf")) , height = 8 , width = 12)
+
+map2(reducedTerms_Rel_results, names(reducedTerms_Rel_results), ~treemapPlot(reducedTerms = .x, title = .y ))
+
+dev.off()
+  
+
+# wordcloud 
+
+wordcloudPlot(reducedTerms_Rel_results[[1]] , min.freq=2, colors="black")
+
+for ( i in 1 : length(names(reducedTerms_Rel_results))) {
+
+jpeg(here("graphs" , "Final_graphs", "Revigo" , "wordcloudPlot" ,  paste0("Revigo_wordcloudPlot_Rel_", names(reducedTerms_Rel_results)[i], ".jpg")) , height = 3000 , width = 3000 , res = 300)
+
+
+wordcloudPlot(reducedTerms_Rel_results[[i ]], min.freq=1, colors="black")
+
+dev.off()
+
+}
+
+ggsave(filename = here("graphs" , "Final_graphs", "Revigo" , "wordcloudPlot" ,  paste0("Revigo_heatmap_Rel_",names(reducedTerms_Rel_results)[i] , " .jpg")),  height =  9 ,  width = 12)
+
+
+
+
+  

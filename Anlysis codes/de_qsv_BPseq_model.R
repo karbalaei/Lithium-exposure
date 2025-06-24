@@ -95,8 +95,8 @@ rse_tx = rse_tx[txIndex,]
 
 #### qSVs #####
 
-modJoint = model.matrix(~Dx*BrainRegion + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
-                          mitoRate + rRNA_rate + totalAssignedGene + RIN +  abs(ERCCsumLogErr), 
+modJoint = model.matrix(~Dx*BrainRegion + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + 
+                          mitoRate + rRNA_rate + totalAssignedGene + RIN +  ERCCsumLogErr, 
                         data=colData(rse_gene))
 
 
@@ -109,8 +109,8 @@ sum(varExplQsva[1:k]) # 87.976%
 
 ####  model w/o interaction to subset by region and extracting qSVs ans samples related to Lithium exposures #### 
 
-modSep_lithium  = model.matrix(~lithium_group + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
-                                 mitoRate + rRNA_rate + totalAssignedGene + RIN + abs(ERCCsumLogErr), 
+modSep_lithium  = model.matrix(~lithium_group + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + 
+                                 mitoRate + rRNA_rate + totalAssignedGene + RIN + ERCCsumLogErr, 
                                data=colData(rse_gene)) 
 
 ##### extract qSVs related to Lithium exposures #####
@@ -218,7 +218,7 @@ geneOut = merge(outGene_Amyg[,nam], outGene_sACC[,nam], by ='row.names', all = T
 
 colnames(geneOut) <-  colnames(geneOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
 
-write.csv(geneOut ,  here("results" , "Lithium_DPseq_FAS_gene.csv"))
+write.csv(geneOut ,  here("results" , "Lithium_BPseq_model_gene.csv"))
 
 geneOut_list <-  list(outGene_Amyg , outGene_sACC)
 
@@ -271,7 +271,7 @@ exonOut = merge(outExon_Amyg[,nam], outExon_sACC[,nam], by ='row.names', all = T
 
 colnames(exonOut) <-  colnames(exonOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
 
-write.csv(exonOut , here("results", "Lithium_DPseq_FAS_exon.csv"))
+write.csv(exonOut , here("results", "Lithium_BPseq_model_exon.csv"))
 
 
 exonOut_list <-  list(outExon_Amyg , outExon_sACC)
@@ -326,7 +326,7 @@ jxnOut = merge(outJxn_Amyg[,nam], outJxn_sACC[,nam], by ='row.names', all = TRUE
 
 colnames(jxnOut) <-  colnames(jxnOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
 
-write.csv(jxnOut , here("results", "Lithium_DPseq_FAS_Jxn.csv"))
+write.csv(jxnOut , here("results", "Lithium_BPseq_model_Jxn.csv"))
 
 
 jxnOut_list <-  list(outJxn_Amyg , outJxn_sACC)
@@ -377,17 +377,17 @@ txOut = merge(outTx_Amyg[,nam], outTx_sACC[,nam], by ='row.names', all = TRUE) %
 colnames(txOut) <-  colnames(txOut) %>% str_replace_all("\\.x" , "\\_Amygdala") %>% str_replace_all("\\.y" , "\\_sACC")
 
 
-write.csv(txOut , here("results", "Lithium_DPseq_FAS_Transcript.csv"))
+write.csv(txOut , here("results", "Lithium_BPseq_model_Transcript.csv"))
 
 txOut_list <-  list(outTx_Amyg , outTx_sACC)
 
 names(txOut_list) <-  c("Amygdala" , "sACC")
 
 
-Outlist <-  list("gene" = geneOut_list, "exon" = exonOut_list, "jxn" = jxnOut_list ,"tx" = txOut_list)
+Lithium_BPseqmodel <-  list("gene" = geneOut_list, "exon" = exonOut_list, "jxn" = jxnOut_list ,"tx" = txOut_list)
 
 
-save(Outlist , file = here("results", "Lithium results DPseqmodel.RDS"))
+save(Lithium_BPseqmodel , file = here("results", "Lithium results BPseqmodel.RDS"))
 
 ## Reproducibility information
 Sys.time()

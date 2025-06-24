@@ -16,7 +16,9 @@ load(file = here("results" ,"Lithium results BPseqmodel.RDS"))
 DEGs <-   Lithium_BPseqmodel$gene$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull(Symbol) %>% unique()
 
 clusters <- clusters %>% dplyr::mutate(gene = gsub("<i>|</i>", "", gene, fixed = FALSE)) %>% 
-  dplyr::mutate(DEGs = if_else(gene %in% DEGs , "yes" , "no"))
+  dplyr::mutate(DEGs = if_else(gene %in% DEGs , "yes" , "no")) %>%
+  dplyr::filter(gene !=".")
+
 
 message("creating tables of clusters")
 

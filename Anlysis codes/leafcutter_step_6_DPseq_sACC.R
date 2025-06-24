@@ -16,8 +16,13 @@ load(file = here("results" ,"Lithium results DPseqmodel.RDS"))
 DEGs <-   Lithium_DPseqmodel$gene$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull(Symbol) %>% unique()
 
 clusters <- clusters %>% dplyr::mutate(gene = gsub("<i>|</i>", "", gene, fixed = FALSE)) %>% 
-  dplyr::mutate(DEGs = if_else(gene %in% DEGs , "yes" , "no"))
+  dplyr::mutate(DEGs = if_else(gene %in% DEGs , "yes" , "no")) %>%
+  dplyr::filter(gene !=".")
 
+
+exons_table <- exons_table %>%
+ dplyr::mutate(gene_name = if_else(gene_name=="." , "NA" , gene_name))
+ 
 message("creating tables of clusters")
 
 walk(clusters$clusterID, ~filter_intron_table(introns, .x, toSave=TRUE , region = "sACC")) 
@@ -38,7 +43,11 @@ write.table(clusters, file = here("results" , "leafcutter" , paste0("DPseq_sACC"
 intron_df <- introns %>%
   mutate(coord = paste0(chr, ":", start, "-", end)) %>%
   mutate(ensemblID = gsub("_[0-9]$", "", ensemblID) ) %>%
-  dplyr::select(clusterID, gene, ensemblID, coord, verdict, deltaPSI = deltapsi)
+  dplyr::select(clusterID, gene, ensemblID, coord, verdict, deltaPSI = deltapsi) %>%
+    dplyr::mutate(gene = if_else(gene =="." , "NA" , gene)) %>%
+      dplyr::mutate(ensemblID= if_else(ensemblID=="." , "NA" , ensemblID))
+
+
 
 
 write.table(intron_df, file = here("results" , "leafcutter" , paste0("DPseq_sACC" , "_sig_introns.csv")), sep = ",", 

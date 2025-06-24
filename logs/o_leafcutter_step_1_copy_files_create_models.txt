@@ -1,0 +1,83 @@
+**** Job starts ****
+Tue Jun 17 12:44:19 PM EDT 2025
+**** JHPCE info ****
+User: rkarbala
+Job id: 17409912
+Job name: leafcutter_step_1_copy_files_create_models
+Node name: compute-109
+Task id: 
+[1] TRUE
+         
+          Amygdala sACC
+  Control       25   27
+  Lithium        9   10
+ [1] 68.300  5.260  3.000  2.400  1.400  1.220  0.919  0.859  0.684  0.587
+[11]  0.521  0.477  0.445  0.433  0.371  0.311  0.279  0.265  0.245
+[1] 87.976
+$sacc
+ [1] "(Intercept)"          "lithium_groupLithium" "AgeDeath"            
+ [4] "SexM"                 "mitoRate"             "rRNA_rate"           
+ [7] "totalAssignedGene"    "RIN"                  "abs(ERCCsumLogErr)"  
+[10] "snpPC1"               "snpPC2"               "snpPC3"              
+[13] "snpPC4"               "snpPC5"               "PC1"                 
+[16] "PC2"                  "PC3"                  "PC4"                 
+[19] "PC5"                  "PC6"                  "PC7"                 
+[22] "PC8"                  "PC9"                  "PC10"                
+[25] "PC11"                 "PC12"                 "PC13"                
+[28] "PC14"                 "PC15"                 "PC16"                
+[31] "PC17"                 "PC18"                 "PC19"                
+[34] "id"                  
+
+$amyg
+ [1] "(Intercept)"          "lithium_groupLithium" "AgeDeath"            
+ [4] "SexM"                 "mitoRate"             "rRNA_rate"           
+ [7] "totalAssignedGene"    "RIN"                  "abs(ERCCsumLogErr)"  
+[10] "snpPC1"               "snpPC2"               "snpPC3"              
+[13] "snpPC4"               "snpPC5"               "PC1"                 
+[16] "PC2"                  "PC3"                  "PC4"                 
+[19] "PC5"                  "PC6"                  "PC7"                 
+[22] "PC8"                  "PC9"                  "PC10"                
+[25] "PC11"                 "PC12"                 "PC13"                
+[28] "PC14"                 "PC15"                 "PC16"                
+[31] "PC17"                 "PC18"                 "PC19"                
+[34] "id"                  
+
+ [1] 68.300  5.260  3.000  2.400  1.400  1.220  0.919  0.859  0.684  0.587
+[11]  0.521  0.477  0.445  0.433  0.371  0.311  0.279  0.265  0.245
+[1] 87.976
+$sacc
+ [1] "(Intercept)"          "lithium_groupLithium" "AgeDeath"            
+ [4] "SexM"                 "mitoRate"             "rRNA_rate"           
+ [7] "totalAssignedGene"    "RIN"                  "abs(ERCCsumLogErr)"  
+[10] "snpPC1"               "snpPC2"               "snpPC3"              
+[13] "snpPC4"               "snpPC5"               "PC1"                 
+[16] "PC2"                  "PC3"                  "PC4"                 
+[19] "PC5"                  "PC6"                  "PC7"                 
+[22] "PC8"                  "PC9"                  "PC10"                
+[25] "PC11"                 "PC12"                 "PC13"                
+[28] "PC14"                 "PC15"                 "PC16"                
+[31] "PC17"                 "PC18"                 "PC19"                
+[34] "id"                  
+
+$amyg
+ [1] "(Intercept)"          "lithium_groupLithium" "AgeDeath"            
+ [4] "SexM"                 "mitoRate"             "rRNA_rate"           
+ [7] "totalAssignedGene"    "RIN"                  "abs(ERCCsumLogErr)"  
+[10] "snpPC1"               "snpPC2"               "snpPC3"              
+[13] "snpPC4"               "snpPC5"               "PC1"                 
+[16] "PC2"                  "PC3"                  "PC4"                 
+[19] "PC5"                  "PC6"                  "PC7"                 
+[22] "PC8"                  "PC9"                  "PC10"                
+[25] "PC11"                 "PC12"                 "PC13"                
+[28] "PC14"                 "PC15"                 "PC16"                
+[31] "PC17"                 "PC18"                 "PC19"                
+[34] "id"                  
+
+ [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[13] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[25] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[37] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[49] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[61] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+**** Job ends ****
+Tue Jun 17 12:46:23 PM EDT 2025

@@ -1,0 +1,340 @@
+**** Job starts ****
+Wed Jun 11 12:33:38 PM EDT 2025
+**** JHPCE info ****
+User: rkarbala
+Job id: 17269750
+Job name: wgcna_Enrichment_DPseq_model
+Node name: compute-097
+Task id: 
+[1] TRUE
+         
+          Amygdala sACC
+  Control       25   27
+  Lithium        9   10
+[1] TRUE
+                 slope      se   df       t pvalue
+grey         -0.000728 0.01550 63.7 -0.0469 0.9630
+turquoise     0.001510 0.00794 64.7  0.1900 0.8500
+blue         -0.013700 0.00880 66.0 -1.5600 0.1250
+brown         0.008950 0.01530 54.1  0.5870 0.5600
+yellow       -0.019900 0.01390 61.8 -1.4300 0.1570
+green         0.000677 0.01750 65.2  0.0386 0.9690
+red          -0.018000 0.02100 54.3 -0.8560 0.3960
+black        -0.030000 0.01760 65.5 -1.7000 0.0937
+pink         -0.002390 0.01480 54.5 -0.1610 0.8730
+magenta      -0.008900 0.01410 61.3 -0.6310 0.5300
+purple       -0.003000 0.01680 57.8 -0.1790 0.8590
+greenyellow  -0.016100 0.01980 66.0 -0.8100 0.4210
+tan          -0.011700 0.01570 66.0 -0.7480 0.4570
+salmon        0.002900 0.01560 65.1  0.1860 0.8530
+cyan         -0.015100 0.01660 66.0 -0.9150 0.3640
+midnightblue -0.023800 0.01500 66.0 -1.5900 0.1170
+lightcyan     0.002550 0.01620 61.7  0.1580 0.8750
+grey60        0.015300 0.01700 65.3  0.9020 0.3700
+lightgreen    0.002350 0.01510 65.6  0.1550 0.8770
+lightyellow  -0.002970 0.01970 62.0 -0.1510 0.8810
+royalblue     0.013100 0.01650 51.2  0.7960 0.4300
+                 slope      se   df       t   pvalue
+grey         -0.000309 0.00995 32.3  -0.031 9.75e-01
+turquoise     0.088300 0.00521 35.6  17.000 1.28e-18
+blue         -0.080000 0.00618 66.0 -12.900 8.84e-20
+brown         0.041000 0.00795 28.4   5.160 1.71e-05
+yellow        0.035800 0.00869 27.6   4.110 3.17e-04
+green        -0.034000 0.01170 37.0  -2.910 6.10e-03
+red           0.002950 0.01010 33.6   0.291 7.73e-01
+black        -0.038700 0.01210 34.6  -3.210 2.88e-03
+pink          0.030700 0.00723 33.2   4.250 1.62e-04
+magenta       0.028200 0.00852 30.6   3.310 2.42e-03
+purple       -0.024500 0.00906 33.0  -2.700 1.09e-02
+greenyellow   0.026300 0.01390 66.0   1.890 6.35e-02
+tan           0.020700 0.01100 66.0   1.890 6.37e-02
+salmon       -0.046000 0.01050 34.2  -4.400 1.00e-04
+cyan         -0.044800 0.01160 66.0  -3.850 2.68e-04
+midnightblue  0.032500 0.01050 66.0   3.090 2.90e-03
+lightcyan     0.019200 0.00963 34.4   1.990 5.44e-02
+grey60       -0.007340 0.01140 36.1  -0.643 5.24e-01
+lightgreen    0.017200 0.01040 34.8   1.650 1.07e-01
+lightyellow   0.005910 0.01170 36.5   0.506 6.16e-01
+royalblue     0.022500 0.00729 32.3   3.080 4.22e-03
+                 slope       se   df      t  pvalue
+grey          1.12e-03 0.000423 30.3  2.650 0.01270
+turquoise     1.25e-04 0.000212 33.3  0.592 0.55800
+blue          1.79e-04 0.000221 66.0  0.810 0.42100
+brown         1.29e-03 0.000464 29.1  2.780 0.00943
+yellow        9.16e-04 0.000386 26.1  2.380 0.02510
+green         5.22e-04 0.000461 34.5  1.130 0.26600
+red          -7.30e-05 0.000659 35.1 -0.111 0.91200
+black         7.89e-04 0.000454 31.6  1.740 0.09190
+pink         -7.34e-04 0.000462 34.6 -1.590 0.12100
+magenta       6.99e-04 0.000398 29.5  1.750 0.08990
+purple       -5.63e-04 0.000502 33.3 -1.120 0.27000
+greenyellow   7.39e-04 0.000497 66.0  1.490 0.14200
+tan           9.98e-04 0.000393 66.0  2.540 0.01360
+salmon       -9.00e-04 0.000409 31.6 -2.200 0.03510
+cyan          3.68e-04 0.000416 66.0  0.886 0.37900
+midnightblue  1.41e-03 0.000376 66.0  3.740 0.00039
+lightcyan     1.76e-04 0.000460 33.5  0.382 0.70500
+grey60       -7.12e-05 0.000444 33.4 -0.160 0.87400
+lightgreen   -1.18e-03 0.000388 31.8 -3.030 0.00479
+lightyellow   6.22e-04 0.000565 35.7  1.100 0.27900
+royalblue     1.61e-04 0.000528 34.6  0.305 0.76200
+                 slope     se   df       t pvalue
+grey         -0.014500 0.0191 30.6 -0.7580 0.4540
+turquoise    -0.013800 0.0100 33.9 -1.3700 0.1780
+blue          0.013600 0.0119 66.0  1.1400 0.2580
+brown        -0.027100 0.0152 27.2 -1.7900 0.0851
+yellow       -0.006370 0.0167 26.0 -0.3810 0.7060
+green         0.003080 0.0225 35.3  0.1370 0.8920
+red           0.023300 0.0193 32.4  1.2000 0.2370
+black         0.015900 0.0233 32.9  0.6850 0.4980
+pink          0.002560 0.0138 32.0  0.1850 0.8540
+magenta       0.004460 0.0164 29.1  0.2730 0.7870
+purple        0.007090 0.0173 31.6  0.4090 0.6850
+greenyellow   0.002250 0.0269 66.0  0.0838 0.9330
+tan           0.016000 0.0213 66.0  0.7540 0.4540
+salmon        0.007000 0.0202 32.5  0.3470 0.7310
+cyan          0.013100 0.0225 66.0  0.5840 0.5610
+midnightblue  0.000922 0.0203 66.0  0.0454 0.9640
+lightcyan    -0.008540 0.0185 32.8 -0.4620 0.6470
+grey60       -0.008230 0.0220 34.4 -0.3740 0.7110
+lightgreen    0.002740 0.0201 33.1  0.1370 0.8920
+lightyellow   0.006330 0.0224 34.9  0.2820 0.7790
+royalblue    -0.021900 0.0139 31.3 -1.5800 0.1250
+null device 
+          1 
+null device 
+          1 
+[1] FALSE
+[1] 24784
+[1] 25136
+[1] 24784
+[1] 24784
+[[1]]
+null device 
+          1 
+
+[[2]]
+null device 
+          1 
+
+[[1]]
+null device 
+          1 
+
+[[2]]
+null device 
+          1 
+
+[[1]]
+null device 
+          1 
+
+[[2]]
+null device 
+          1 
+
+[[1]]
+null device 
+          1 
+
+[[2]]
+null device 
+          1 
+
+[1] "2025-06-11 12:35:30 EDT"
+   user  system elapsed 
+104.506   3.084 110.064 
+─ Session info ───────────────────────────────────────────────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.4.0 Patched (2024-05-22 r86590)
+ os       Rocky Linux 9.4 (Blue Onyx)
+ system   x86_64, linux-gnu
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       US/Eastern
+ date     2025-06-11
+ pandoc   3.1.13 @ /jhpce/shared/community/core/conda_R/4.4/bin/ (via rmarkdown)
+
+─ Packages ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+ package              * version    date (UTC) lib source
+ abind                  1.4-5      2016-07-21 [2] CRAN (R 4.4.0)
+ annotate               1.82.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ AnnotationDbi          1.66.0     2024-05-01 [2] Bioconductor 3.19 (R 4.4.0)
+ ape                    5.8-1      2024-12-16 [1] CRAN (R 4.4.0)
+ aplot                  0.2.5      2025-02-27 [1] CRAN (R 4.4.0)
+ backports              1.5.0      2024-05-23 [2] CRAN (R 4.4.0)
+ base64enc              0.1-3      2015-07-28 [2] CRAN (R 4.4.0)
+ Biobase              * 2.64.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ BiocGenerics         * 0.50.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ BiocParallel         * 1.38.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ Biostrings             2.72.1     2024-06-02 [2] Bioconductor 3.19 (R 4.4.0)
+ bit                    4.6.0      2025-03-06 [1] CRAN (R 4.4.0)
+ bit64                  4.0.5      2020-08-30 [2] CRAN (R 4.4.0)
+ blob                   1.2.4      2023-03-17 [2] CRAN (R 4.4.0)
+ boot                   1.3-30     2024-02-26 [3] CRAN (R 4.4.0)
+ broom                * 1.0.6      2024-05-17 [2] CRAN (R 4.4.0)
+ cachem                 1.1.0      2024-05-16 [2] CRAN (R 4.4.0)
+ cellranger             1.1.0      2016-07-27 [2] CRAN (R 4.4.0)
+ checkmate              2.3.2      2024-07-29 [2] CRAN (R 4.4.0)
+ cli                    3.6.5      2025-04-23 [1] CRAN (R 4.4.0)
+ cluster                2.1.6      2023-12-01 [3] CRAN (R 4.4.0)
+ clusterProfiler      * 4.12.6     2024-08-25 [1] Bioconductor 3.19 (R 4.4.0)
+ codetools              0.2-20     2024-03-31 [3] CRAN (R 4.4.0)
+ colorspace             2.1-1      2024-07-26 [2] CRAN (R 4.4.0)
+ cowplot                1.1.3      2024-01-22 [2] CRAN (R 4.4.0)
+ crayon                 1.5.3      2024-06-20 [1] CRAN (R 4.4.0)
+ data.table             1.17.4     2025-05-26 [1] CRAN (R 4.4.0)
+ DBI                    1.2.3      2024-06-02 [2] CRAN (R 4.4.0)
+ DelayedArray           0.30.1     2024-05-07 [2] Bioconductor 3.19 (R 4.4.0)
+ digest                 0.6.37     2024-08-19 [1] CRAN (R 4.4.0)
+ doParallel             1.0.17     2022-02-07 [2] CRAN (R 4.4.0)
+ DOSE                   3.30.5     2024-09-01 [1] Bioconductor 3.19 (R 4.4.0)
+ dplyr                * 1.1.4      2023-11-17 [2] CRAN (R 4.4.0)
+ dynamicTreeCut       * 1.63-1     2016-03-11 [1] CRAN (R 4.4.0)
+ edgeR                  4.2.1      2024-07-14 [2] Bioconductor 3.19 (R 4.4.0)
+ enrichplot             1.24.4     2024-09-01 [1] Bioconductor 3.19 (R 4.4.0)
+ evaluate               1.0.3      2025-01-10 [1] CRAN (R 4.4.0)
+ farver                 2.1.2      2024-05-13 [2] CRAN (R 4.4.0)
+ fastcluster          * 1.2.6      2024-01-12 [2] CRAN (R 4.4.0)
+ fastmap                1.2.0      2024-05-15 [2] CRAN (R 4.4.0)
+ fastmatch              1.1-4      2023-08-18 [2] CRAN (R 4.4.0)
+ fgsea                  1.30.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ forcats              * 1.0.0      2023-01-29 [2] CRAN (R 4.4.0)
+ foreach                1.5.2      2022-02-02 [2] CRAN (R 4.4.0)
+ foreign                0.8-87     2024-06-26 [3] CRAN (R 4.4.0)
+ Formula                1.2-5      2023-02-24 [2] CRAN (R 4.4.0)
+ fs                     1.6.4      2024-04-25 [2] CRAN (R 4.4.0)
+ gargle                 1.5.2      2023-07-20 [2] CRAN (R 4.4.0)
+ genefilter           * 1.86.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ generics               0.1.3      2022-07-05 [2] CRAN (R 4.4.0)
+ GenomeInfoDb         * 1.40.1     2024-05-24 [1] Bioconductor 3.19 (R 4.4.0)
+ GenomeInfoDbData       1.2.12     2024-05-23 [2] Bioconductor
+ GenomicRanges        * 1.56.2     2024-10-09 [1] Bioconductor 3.19 (R 4.4.0)
+ ggforce                0.4.2      2024-02-19 [2] CRAN (R 4.4.0)
+ ggfun                  0.1.8      2024-12-03 [1] CRAN (R 4.4.0)
+ ggplot2              * 3.5.1      2024-04-23 [2] CRAN (R 4.4.0)
+ ggplotify              0.1.2      2023-08-09 [1] CRAN (R 4.4.0)
+ ggraph                 2.2.1      2024-03-07 [2] CRAN (R 4.4.0)
+ ggrepel                0.9.5      2024-01-10 [2] CRAN (R 4.4.0)
+ ggtree                 3.12.0     2024-04-30 [1] Bioconductor 3.19 (R 4.4.0)
+ glue                   1.8.0      2024-09-30 [1] CRAN (R 4.4.0)
+ GO.db                  3.19.1     2024-05-23 [2] Bioconductor
+ googledrive            2.1.1      2023-06-11 [2] CRAN (R 4.4.0)
+ GOSemSim               2.30.2     2024-08-21 [1] Bioconductor 3.19 (R 4.4.0)
+ graphlayouts           1.1.1      2024-03-09 [2] CRAN (R 4.4.0)
+ gridExtra            * 2.3        2017-09-09 [2] CRAN (R 4.4.0)
+ gridGraphics           0.5-1      2020-12-13 [1] CRAN (R 4.4.0)
+ gson                   0.1.0      2023-03-07 [1] CRAN (R 4.4.0)
+ gtable                 0.3.6      2024-10-25 [1] CRAN (R 4.4.0)
+ here                 * 1.0.1      2020-12-13 [2] CRAN (R 4.4.0)
+ Hmisc                  5.2-3      2025-03-16 [1] CRAN (R 4.4.0)
+ hms                    1.1.3      2023-03-21 [2] CRAN (R 4.4.0)
+ htmlTable              2.4.3      2024-07-21 [1] CRAN (R 4.4.0)
+ htmltools              0.5.8.1    2024-04-04 [2] CRAN (R 4.4.0)
+ htmlwidgets            1.6.4      2023-12-06 [2] CRAN (R 4.4.0)
+ httr                   1.4.7      2023-08-15 [2] CRAN (R 4.4.0)
+ httr2                  1.0.2      2024-07-16 [2] CRAN (R 4.4.0)
+ igraph                 2.1.4      2025-01-23 [1] CRAN (R 4.4.0)
+ impute                 1.78.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ IRanges              * 2.38.1     2024-07-03 [2] Bioconductor 3.19 (R 4.4.0)
+ iterators              1.0.14     2022-02-05 [2] CRAN (R 4.4.0)
+ jaffelab             * 0.99.34    2024-06-26 [1] Github (LieberInstitute/jaffelab@2710795)
+ jsonlite               2.0.0      2025-03-27 [1] CRAN (R 4.4.0)
+ KEGGREST               1.44.1     2024-06-19 [2] Bioconductor 3.19 (R 4.4.0)
+ knitr                  1.50       2025-03-16 [1] CRAN (R 4.4.0)
+ lattice                0.22-6     2024-03-20 [3] CRAN (R 4.4.0)
+ lazyeval               0.2.2      2019-03-15 [2] CRAN (R 4.4.0)
+ lifecycle              1.0.4      2023-11-07 [2] CRAN (R 4.4.0)
+ limma                  3.60.6     2024-10-02 [1] Bioconductor 3.19 (R 4.4.0)
+ lme4                 * 1.1-37     2025-03-26 [1] CRAN (R 4.4.0)
+ lmerTest             * 3.1-3      2024-07-26 [1] Github (runehaubo/lmerTestR@35dc588)
+ locfit                 1.5-9.10   2024-06-24 [2] CRAN (R 4.4.0)
+ lubridate            * 1.9.4      2024-12-08 [1] CRAN (R 4.4.0)
+ magrittr               2.0.3      2022-03-30 [2] CRAN (R 4.4.0)
+ MASS                   7.3-61     2024-06-13 [3] CRAN (R 4.4.0)
+ Matrix               * 1.7-0      2024-04-26 [3] CRAN (R 4.4.0)
+ MatrixGenerics       * 1.16.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ matrixStats          * 1.5.0      2025-01-07 [1] CRAN (R 4.4.0)
+ memoise                2.0.1      2021-11-26 [2] CRAN (R 4.4.0)
+ mgcv                 * 1.9-1      2023-12-21 [3] CRAN (R 4.4.0)
+ minqa                  1.2.7      2024-05-20 [2] CRAN (R 4.4.0)
+ munsell                0.5.1      2024-04-01 [2] CRAN (R 4.4.0)
+ nlme                 * 3.1-166    2024-08-14 [3] CRAN (R 4.4.0)
+ nloptr                 2.2.1      2025-03-17 [1] CRAN (R 4.4.0)
+ nnet                   7.3-19     2023-05-03 [3] CRAN (R 4.4.0)
+ numDeriv               2016.8-1.1 2019-06-06 [2] CRAN (R 4.4.0)
+ patchwork              1.2.0      2024-01-08 [2] CRAN (R 4.4.0)
+ pillar                 1.10.2     2025-04-05 [1] CRAN (R 4.4.0)
+ pkgconfig              2.0.3      2019-09-22 [2] CRAN (R 4.4.0)
+ plyr                   1.8.9      2023-10-02 [2] CRAN (R 4.4.0)
+ png                    0.1-8      2022-11-29 [2] CRAN (R 4.4.0)
+ polyclip               1.10-7     2024-07-23 [2] CRAN (R 4.4.0)
+ preprocessCore         1.66.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ purrr                * 1.0.4      2025-02-05 [1] CRAN (R 4.4.0)
+ qvalue                 2.36.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ R.methodsS3            1.8.2      2022-06-13 [2] CRAN (R 4.4.0)
+ R.oo                   1.26.0     2024-01-24 [2] CRAN (R 4.4.0)
+ R.utils                2.12.3     2023-11-18 [2] CRAN (R 4.4.0)
+ R6                     2.6.1      2025-02-15 [1] CRAN (R 4.4.0)
+ rafalib              * 1.0.4      2025-04-08 [1] CRAN (R 4.4.0)
+ rappdirs               0.3.3      2021-01-31 [2] CRAN (R 4.4.0)
+ rbibutils              2.2.16     2023-10-25 [2] CRAN (R 4.4.0)
+ RColorBrewer         * 1.1-3      2022-04-03 [2] CRAN (R 4.4.0)
+ Rcpp                   1.0.14     2025-01-12 [1] CRAN (R 4.4.0)
+ Rdpack                 2.6.1      2024-08-06 [2] CRAN (R 4.4.0)
+ readr                * 2.1.5      2024-01-10 [2] CRAN (R 4.4.0)
+ readxl               * 1.4.3      2023-07-06 [2] CRAN (R 4.4.0)
+ reformulas             0.4.1      2025-04-30 [1] CRAN (R 4.4.0)
+ reshape2               1.4.4      2020-04-09 [2] CRAN (R 4.4.0)
+ rlang                  1.1.6      2025-04-11 [1] CRAN (R 4.4.0)
+ rmarkdown              2.27       2024-05-17 [2] CRAN (R 4.4.0)
+ rpart                  4.1.23     2023-12-05 [3] CRAN (R 4.4.0)
+ rprojroot              2.0.4      2023-11-05 [2] CRAN (R 4.4.0)
+ RSQLite                2.3.7      2024-05-27 [2] CRAN (R 4.4.0)
+ rstudioapi             0.16.0     2024-03-24 [2] CRAN (R 4.4.0)
+ S4Arrays               1.4.1      2024-05-20 [2] Bioconductor 3.19 (R 4.4.0)
+ S4Vectors            * 0.42.1     2024-07-03 [2] Bioconductor 3.19 (R 4.4.0)
+ scales                 1.3.0      2023-11-28 [2] CRAN (R 4.4.0)
+ scatterpie             0.2.4      2024-08-28 [1] CRAN (R 4.4.0)
+ segmented              2.1-4      2025-02-28 [1] CRAN (R 4.4.0)
+ sessioninfo            1.2.2      2021-12-06 [2] CRAN (R 4.4.0)
+ shadowtext             0.1.4      2024-07-18 [1] CRAN (R 4.4.0)
+ SparseArray            1.4.8      2024-05-24 [1] Bioconductor 3.19 (R 4.4.0)
+ statmod                1.5.0      2023-01-06 [2] CRAN (R 4.4.0)
+ stringi                1.8.4      2024-05-06 [2] CRAN (R 4.4.0)
+ stringr              * 1.5.1      2023-11-14 [2] CRAN (R 4.4.0)
+ SummarizedExperiment * 1.34.0     2024-05-01 [2] Bioconductor 3.19 (R 4.4.0)
+ survival               3.7-0      2024-06-05 [3] CRAN (R 4.4.0)
+ sva                  * 3.52.0     2024-05-01 [2] Bioconductor 3.19 (R 4.4.0)
+ tibble               * 3.2.1      2023-03-20 [2] CRAN (R 4.4.0)
+ tidygraph              1.3.1      2024-01-30 [2] CRAN (R 4.4.0)
+ tidyr                * 1.3.1      2024-01-24 [2] CRAN (R 4.4.0)
+ tidyselect             1.2.1      2024-03-11 [2] CRAN (R 4.4.0)
+ tidytree               0.4.6      2023-12-12 [1] CRAN (R 4.4.0)
+ tidyverse            * 2.0.0      2023-02-22 [2] CRAN (R 4.4.0)
+ timechange             0.3.0      2024-01-18 [2] CRAN (R 4.4.0)
+ treeio                 1.28.0     2024-04-30 [1] Bioconductor 3.19 (R 4.4.0)
+ tweenr                 2.0.3      2024-02-26 [2] CRAN (R 4.4.0)
+ tzdb                   0.5.0      2025-03-15 [1] CRAN (R 4.4.0)
+ UCSC.utils             1.0.0      2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ vctrs                  0.6.5      2023-12-01 [2] CRAN (R 4.4.0)
+ viridis                0.6.5      2024-01-29 [2] CRAN (R 4.4.0)
+ viridisLite            0.4.2      2023-05-02 [2] CRAN (R 4.4.0)
+ WGCNA                * 1.73       2024-09-18 [1] CRAN (R 4.4.0)
+ withr                  3.0.2      2024-10-28 [1] CRAN (R 4.4.0)
+ xfun                   0.52       2025-04-02 [1] CRAN (R 4.4.0)
+ XML                    3.99-0.18  2025-01-01 [1] CRAN (R 4.4.0)
+ xtable                 1.8-4      2019-04-21 [2] CRAN (R 4.4.0)
+ XVector                0.44.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+ yulab.utils            0.2.0      2025-01-29 [1] CRAN (R 4.4.0)
+ zlibbioc               1.50.0     2024-04-30 [2] Bioconductor 3.19 (R 4.4.0)
+
+ [1] /users/rkarbala/R/4.4
+ [2] /jhpce/shared/community/core/conda_R/4.4/R/lib64/R/site-library
+ [3] /jhpce/shared/community/core/conda_R/4.4/R/lib64/R/library
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+**** Job ends ****
+Wed Jun 11 12:35:31 PM EDT 2025

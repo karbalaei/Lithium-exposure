@@ -1,0 +1,50 @@
+Loading LIBD SLURM module for leafcutter/0.2.9
+Loading required package: Rcpp
+Loading required package: Rcpp
+Loading required package: Rcpp
+Loading required package: Rcpp
+Loading required package: doMC
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+Loading required package: doMC
+Loading required package: doMC
+Loading required package: foreach
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: doMC
+Loading required package: parallel
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+Loading required package: iterators
+Loading required package: parallel
+Error in { : 
+  task 6 failed - "arguments imply differing number of rows: 1, 0"
+Calls: differential_splicing ... cluster_results_table -> %>% -> mutate -> %dopar% -> <Anonymous>
+In addition: Warning message:
+In mclapply(argsList, FUN, mc.preschedule = preschedule, mc.set.seed = set.seed,  :
+  scheduled cores 6, 14, 23, 29, 32, 38, 39, 40, 45 did not deliver results, all values of the jobs will be affected
+Execution halted
+Error in { : 
+  task 6 failed - "arguments imply differing number of rows: 1, 0"
+Calls: differential_splicing ... cluster_results_table -> %>% -> mutate -> %dopar% -> <Anonymous>
+In addition: Warning message:
+In mclapply(argsList, FUN, mc.preschedule = preschedule, mc.set.seed = set.seed,  :
+  scheduled cores 6, 8, 10, 23, 32, 38, 40, 41, 42, 44 did not deliver results, all values of the jobs will be affected
+Execution halted
+Error in { : 
+  task 1 failed - "arguments imply differing number of rows: 1, 0"
+Calls: differential_splicing ... cluster_results_table -> %>% -> mutate -> %dopar% -> <Anonymous>
+In addition: Warning message:
+In mclapply(argsList, FUN, mc.preschedule = preschedule, mc.set.seed = set.seed,  :
+  scheduled cores 1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 21, 23, 24, 25, 27, 28, 29, 31, 32, 35, 38, 39, 40, 41, 43, 44, 45, 55, 57, 58, 60, 61, 63, 64 did not deliver results, all values of the jobs will be affected
+Execution halted
+Error in { : 
+  task 1 failed - "arguments imply differing number of rows: 1, 0"
+Calls: differential_splicing ... cluster_results_table -> %>% -> mutate -> %dopar% -> <Anonymous>
+In addition: Warning message:
+In mclapply(argsList, FUN, mc.preschedule = preschedule, mc.set.seed = set.seed,  :
+  scheduled cores 1, 4, 7, 11, 23, 32, 37, 38, 40, 41, 58, 60 did not deliver results, all values of the jobs will be affected
+Execution halted
+slurmstepd: error: Detected 70 oom-kill event(s) in StepId=17418738.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.

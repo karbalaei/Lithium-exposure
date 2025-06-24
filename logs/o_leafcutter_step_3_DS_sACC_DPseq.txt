@@ -1,0 +1,56 @@
+**** Job starts ****
+Wed Jun 18 09:57:32 AM EDT 2025
+**** JHPCE info ****
+User: rkarbala
+Job id: 17428288
+Job name: DS_leafcutter_sACC_DPseq
+Node name: compute-162
+Task id: 
+DPseq_model sACC
+Loading counts from ../leafcutter/data/covariates/leafcutter_perind_numers.counts.gz 
+Loading metadata from ../data/modSep_sACC_for_leafcutter_DPseq.txt 
+Encoding as Lithium =0, Control =1
+Settings:
+$output_prefix
+[1] "../leafcutter/data/covariates_results/sACC_covariates_DPseq"
+
+$max_cluster_size
+[1] Inf
+
+$min_samples_per_intron
+[1] 5
+
+$min_samples_per_group
+[1] 3
+
+$min_coverage
+[1] 20
+
+$timeout
+[1] 30
+
+$num_threads
+[1] 64
+
+$init
+[1] "smart"
+
+$seed
+[1] 12345
+
+$help
+[1] FALSE
+
+Running differential splicing analysis...
+Differential splicing summary:
+                                                                 statuses  Freq
+1                                              <=1 sample with coverage>0    53
+2                                   <=1 sample with coverage>min_coverage  4210
+3                     <2 introns used in >=min_samples_per_intron samples   387
+4 Error in sampler$call_sampler(c(args, dotlist)): Initialization failed.    50
+5                                                Not enough valid samples  3141
+6                                                                 Success 29614
+7                                                                 timeout  1637
+Saving results...
+No exon_file provided.
+All done, exiting

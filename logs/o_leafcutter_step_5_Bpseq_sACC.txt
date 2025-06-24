@@ -1,0 +1,10 @@
+Preparing for visualisation
+Results to be saved in: ../leafcutter/data/covariates_results/step_5_BPseq_sACC.Rdata 
+Using annotation at: ../leafcutter/data/covariates_results/gencode_hg19 
+Loading counts from ../leafcutter/data/covariates/leafcutter_perind_numers.counts.gz 
+Loading metadata from ../data/modSep_sACC_for_leafcutter_BPseq.txt 
+Loading exons from ../leafcutter/data/covariates_results/gencode_hg19_all_exons.txt.gz 
+[1] "Annotating junctions"
+[1] "Preparing results"
+[1] "converting counts to ratios"
+[1] "creating PCA"

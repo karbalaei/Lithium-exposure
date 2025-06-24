@@ -1,0 +1,64 @@
+Loading conda_R/4.4
+
+Currently Loaded Modules:
+  1) JHPCE_ROCKY9_DEFAULT_ENV   3) conda/3-24.3.0
+  2) JHPCE_tools/3.0            4) conda_R/4.4
+
+ 
+
+here() starts at /dcs04/lieber/lcolladotor/hydeZandi_LIBD2005/Lithium_project
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:gridExtra’:
+
+    combine
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+New names:
+• `` -> `...1`
+Rows: 24784 Columns: 15
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (3): ...1, common_gene_id_Amygdala, common_gene_id_sACC
+dbl (12): logFC_Amygdala, AveExpr_Amygdala, t_Amygdala, P.Value_Amygdala, ad...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+New names:
+• `` -> `...1`
+Rows: 393260 Columns: 15
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (3): ...1, common_gene_id_Amygdala, common_gene_id_sACC
+dbl (12): logFC_Amygdala, AveExpr_Amygdala, t_Amygdala, P.Value_Amygdala, ad...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+New names:
+• `` -> `...1`
+Rows: 262765 Columns: 17
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (5): ...1, common_gene_id_Amygdala, Symbol_General_Amygdala, common_gen...
+dbl (12): logFC_Amygdala, AveExpr_Amygdala, t_Amygdala, P.Value_Amygdala, ad...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+New names:
+• `` -> `...1`
+Rows: 70721 Columns: 17
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (5): ...1, common_gene_id_Amygdala, Symbol_General_Amygdala, common_gen...
+dbl (12): logFC_Amygdala, AveExpr_Amygdala, t_Amygdala, P.Value_Amygdala, ad...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.

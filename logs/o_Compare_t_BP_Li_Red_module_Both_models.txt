@@ -1,0 +1,38 @@
+**** Job starts ****
+Thu Jun 12 02:53:14 PM EDT 2025
+**** JHPCE info ****
+User: rkarbala
+Job id: 17304454
+Job name: Compare_t_BP_Li_Red_module_Both_models
+Node name: compute-100
+Task id: 
+Loading objects:
+  rse_gene
+  getRPKM
+Loading objects:
+  net_list
+  net
+  fNames
+[1] TRUE
+     num          col Label numGenes
+1      0         grey   ME0    13173
+27     1    turquoise   ME1     2637
+25     2         blue   ME2     2583
+28     3        brown   ME3     1713
+37     4       yellow   ME4     1440
+30     5        green   ME5     1117
+145    6          red   ME6      579
+20     7        black   ME7      306
+76     8         pink   ME8      224
+40     9      magenta   ME9      220
+39    10       purple  ME10      202
+18    11  greenyellow  ME11      198
+211   12          tan  ME12      139
+285   13       salmon  ME13      102
+1060  14         cyan  ME14       84
+1172  15 midnightblue  ME15       82
+188   16    lightcyan  ME16       78
+443   17       grey60  ME17       69
+26    18   lightgreen  ME18       66
+153   19  lightyellow  ME19       65
+654   20    royalblue  ME20       59

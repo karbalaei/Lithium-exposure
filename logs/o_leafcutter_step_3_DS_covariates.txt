@@ -1,0 +1,150 @@
+**** Job starts ****
+Tue Jun 17 05:02:01 PM EDT 2025
+**** JHPCE info ****
+User: rkarbala
+Job id: 17418738
+Job name: DS_leafcutter_LIBD_BED_covariates
+Node name: compute-091
+Task id: 
+BPseq_model
+DPseq_model
+Loading counts from ../leafcutter/data/covariates/leafcutter_perind_numers.counts.gz 
+Loading counts from ../leafcutter/data/covariates/leafcutter_perind_numers.counts.gz 
+Loading counts from ../leafcutter/data/covariates/leafcutter_perind_numers.counts.gz 
+Loading counts from ../leafcutter/data/covariates/leafcutter_perind_numers.counts.gz 
+Loading metadata from ../data/modSep_sACC_for_leafcutter_BPseq.txt 
+Encoding as Lithium =0, Control =1
+Settings:
+$output_prefix
+[1] "../leafcutter/data/covariates_results/sACC_covariates_BPseq"
+
+$max_cluster_size
+[1] Inf
+
+$min_samples_per_intron
+[1] 5
+
+$min_samples_per_group
+[1] 3
+
+$min_coverage
+[1] 20
+
+$timeout
+[1] 30
+
+$num_threads
+[1] 64
+
+$init
+[1] "smart"
+
+$seed
+[1] 12345
+
+$help
+[1] FALSE
+
+Running differential splicing analysis...
+Loading metadata from ../data/modSep_Amygdala_for_leafcutter_DPseq.txt 
+Encoding as Control =0, Lithium =1
+Loading metadata from ../data/modSep_sACC_for_leafcutter_DPseq.txt 
+Encoding as Lithium =0, Control =1
+Loading metadata from ../data/modSep_Amygdala_for_leafcutter_BPseq.txt 
+Encoding as Control =0, Lithium =1
+Settings:
+$output_prefix
+[1] "../leafcutter/data/covariates_results/Amygdala_covariates_DPseq"
+
+$max_cluster_size
+[1] Inf
+
+$min_samples_per_intron
+[1] 5
+
+$min_samples_per_group
+[1] 3
+
+$min_coverage
+[1] 20
+
+$timeout
+[1] 30
+
+$num_threads
+[1] 64
+
+$init
+[1] "smart"
+
+$seed
+[1] 12345
+
+$help
+[1] FALSE
+
+Running differential splicing analysis...
+Settings:
+$output_prefix
+[1] "../leafcutter/data/covariates_results/sACC_covariates_DPseq"
+
+$max_cluster_size
+[1] Inf
+
+$min_samples_per_intron
+[1] 5
+
+$min_samples_per_group
+[1] 3
+
+$min_coverage
+[1] 20
+
+$timeout
+[1] 30
+
+$num_threads
+[1] 64
+
+$init
+[1] "smart"
+
+$seed
+[1] 12345
+
+$help
+[1] FALSE
+
+Running differential splicing analysis...
+Settings:
+$output_prefix
+[1] "../leafcutter/data/covariates_results/Amygdala_covariates_BPseq"
+
+$max_cluster_size
+[1] Inf
+
+$min_samples_per_intron
+[1] 5
+
+$min_samples_per_group
+[1] 3
+
+$min_coverage
+[1] 20
+
+$timeout
+[1] 30
+
+$num_threads
+[1] 64
+
+$init
+[1] "smart"
+
+$seed
+[1] 12345
+
+$help
+[1] FALSE
+
+Running differential splicing analysis...

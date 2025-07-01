@@ -1,3 +1,5 @@
+### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! ###
+
 ### Library ####
 
 library(SummarizedExperiment)
@@ -19,145 +21,26 @@ library(vctrs)
 library(tibble)
 library(stringr)
 
-### Loading data and preparing lithium df  #####
+### Load preprocessed data ###
+### (output of preprocessing/preprocessing_bpseq_model.R) ###
+
+load("../preprocessed_data/rse_gene_lithium_bpseq_model_processed_data.Rdata")
+load("../preprocessed_data/rse_exon_lithium_bpseq_model_processed_data.Rdata")
+load("../preprocessed_data/rse_jxn_lithium_bpseq_model_processed_data.Rdata")
+load("../preprocessed_data/rse_tx_lithium_bpseq_model_processed_data.Rdata")
+load("../preprocessed_data/qSV_mat_lithium_bpseq_model_processed_data.Rdata")
 
 
-load(here("data", "zandiHypde_bipolar_rseGene_n511.rda"))
-load(here("data","zandiHypde_bipolar_rseExon_n511.rda"))
-load(here("data","zandiHypde_bipolar_rseJxn_n511.rda"))
-load(here("data","zandiHypde_bipolar_rseTx_n511.rda"))
-load(here("data","degradation_rse_BipSeq_BothRegions.rda")) #load cov_rse
+### Differentially expressed feature analysis by region #####
+
+modSep_lithium  = model.matrix(
+  ~lithium_group + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + snpPC4 + snpPC5 +
+    mitoRate + rRNA_rate + totalAssignedGene + RIN + abs(ERCCsumLogErr), 
+  data=colData(rse_gene_lithium)
+) 
 
 
-identical(colnames(rse_gene), colnames(cov_rse)) # TRUE
-rse_gene$Dx = factor(ifelse(rse_gene$PrimaryDx == "Control", "Control","Bipolar"), 
-                     levels = c("Control", "Bipolar"))
-
-##### add ancestry  ####
-load(here("data","zandiHyde_bipolar_MDS_n511.rda")) # load mds
-
-
-mds = mds[rse_gene$BrNum,1:5]
-colnames(mds) = paste0("snpPC", 1:5)
-colData(rse_gene) = cbind(colData(rse_gene), mds)
-
-
-#### Lithium exposure info ####
-
-
-drug_info = read.delim(here("lithium","drug_info.csv"),as.is=TRUE , sep = ",")
-
-
-rse_gene$lithium = drug_info$lithium[match(rse_gene$BrNum, drug_info$BrNum)]
-rse_gene$lifetime_lithium = drug_info$life_lithium[match(rse_gene$BrNum, drug_info$BrNum)]
-rse_gene$lithium_group = NA
-rse_gene$lithium_group[which(rse_gene$lithium==1)] =1 
-rse_gene$lithium_group[which(rse_gene$lithium==0 & rse_gene$lifetime_lithium==0)] =0
-
-table(rse_gene$lithium_group , rse_gene$BrainRegion)
-
-# Amygdala sACC
-# 0       25   27
-# 1        9   10
-
-
-### Filtering, whole data step1 ####
-
-##### Gene ######
-assays(rse_gene)$rpkm = recount::getRPKM(rse_gene, 'Length')
-geneIndex = rowMeans(assays(rse_gene)$rpkm) > 0.25  ## both regions
-rse_gene = rse_gene[geneIndex,]
-
-#####  Exon #####
-
-assays(rse_exon)$rpkm = recount::getRPKM(rse_exon, 'Length')
-exonIndex = rowMeans(assays(rse_exon)$rpkm) > 0.3
-rse_exon = rse_exon[exonIndex,]
-
-
-#### Junction #####
-
-rowRanges(rse_jxn)$Length <- 100
-assays(rse_jxn)$rp10m = recount::getRPKM(rse_jxn, 'Length')
-
-jxnIndex = rowMeans(assays(rse_jxn)$rp10m) > 0.35 & rowData(rse_jxn)$Class != "Novel"
-rse_jxn = rse_jxn[jxnIndex,]
-
-
-#### Transcript ####
-txIndex = rowMeans(assays(rse_tx)$tpm) > 0.4 
-rse_tx = rse_tx[txIndex,]
-
-
-
-### Get qSVs and create model whole samples,  step2 ####  
-
-
-#### qSVs #####
-
-modJoint = model.matrix(~Dx*BrainRegion + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + 
-                          mitoRate + rRNA_rate + totalAssignedGene + RIN +  ERCCsumLogErr, 
-                        data=colData(rse_gene))
-
-
-degExprs = log2(assays(cov_rse)$count+1)
-k = num.sv(degExprs, modJoint) # 19
-qSV_mat = prcomp(t(degExprs))$x[,1:k]
-varExplQsva = getPcaVars(prcomp(t(degExprs)))
-varExplQsva[1:k]
-sum(varExplQsva[1:k]) # 87.976%
-
-####  model w/o interaction to subset by region and extracting qSVs ans samples related to Lithium exposures #### 
-
-modSep_lithium  = model.matrix(~lithium_group + AgeDeath + Sex + snpPC1 + snpPC2 + snpPC3 + 
-                                 mitoRate + rRNA_rate + totalAssignedGene + RIN + ERCCsumLogErr, 
-                               data=colData(rse_gene)) 
-
-##### extract qSVs related to Lithium exposures #####
-
-qSV_mat_lithium = qSV_mat[rownames(modSep_lithium),]
-
-
-##### extract samples related to Lithium exposures #####
-
-rse_gene_lithium = rse_gene[,rownames(modSep_lithium)]
-rse_exon_lithium = rse_exon[,rownames(modSep_lithium)]
-rse_jxn_lithium = rse_jxn[,rownames(modSep_lithium)]
-rse_tx_lithium = rse_tx[,rownames(modSep_lithium)]
-
-### Filtering data only on lithiuim samples,  step3 ####
-
-##### Gene ######
-assays(rse_gene_lithium)$rpkm = recount::getRPKM(rse_gene_lithium, 'Length')
-geneIndex = rowMeans(assays(rse_gene_lithium)$rpkm) > 0.25  ## both regions
-rse_gene_lithium = rse_gene_lithium[geneIndex,]
-
-#####  Exon #####
-
-assays(rse_exon_lithium)$rpkm = recount::getRPKM(rse_exon_lithium, 'Length')
-exonIndex = rowMeans(assays(rse_exon_lithium)$rpkm) > 0.3
-rse_exon_lithium = rse_exon_lithium[exonIndex,]
-
-
-#### Junction #####
-
-rowRanges(rse_jxn_lithium)$Length <- 100
-assays(rse_jxn_lithium)$rp10m = recount::getRPKM(rse_jxn_lithium, 'Length')
-
-jxnIndex = rowMeans(assays(rse_jxn_lithium)$rp10m) > 0.35 & rowData(rse_jxn_lithium)$Class != "Novel"
-rse_jxn_lithium = rse_jxn_lithium[jxnIndex,]
-
-
-#### Transcript ####
-txIndex = rowMeans(assays(rse_tx_lithium)$tpm) > 0.4 
-rse_tx_lithium = rse_tx_lithium[txIndex,]
-
-
-
-### Differentially expressed feature analysis , step4 #####
-
-
-#### split back by region ####
+## split by region 
 
 sACC_Index_lithium = which(colData(rse_gene_lithium)$BrainRegion == "sACC")
 mod_sACC_lithium = cbind(modSep_lithium[sACC_Index_lithium,], qSV_mat_lithium[sACC_Index_lithium, ])
@@ -184,7 +67,7 @@ outGene_sACC = topTable(eBGene_sACC,coef=2,
 outGene_sACC = outGene_sACC[rownames(rse_gene_lithium),]
 
 sum(outGene_sACC$adj.P.Val < 0.05) # 0
-sum(outGene_sACC$P.Value < 0.005) # 52
+sum(outGene_sACC$P.Value < 0.005) # 50
 
 outGene_sACC <-  outGene_sACC %>% dplyr::rename("common_gene_id" = gencodeID)
 
@@ -205,7 +88,7 @@ outGene_Amyg = topTable(eBGene_Amyg,coef=2,
 outGene_Amyg = outGene_Amyg[rownames(rse_gene_lithium),]
 
 sum(outGene_Amyg$adj.P.Val < 0.05) #0
-sum(outGene_Amyg$P.Value < 0.005) #249
+sum(outGene_Amyg$P.Value < 0.005) #237
 
 outGene_Amyg <-  outGene_Amyg %>% dplyr::rename("common_gene_id" = gencodeID)
 
@@ -387,7 +270,10 @@ names(txOut_list) <-  c("Amygdala" , "sACC")
 Lithium_BPseqmodel <-  list("gene" = geneOut_list, "exon" = exonOut_list, "jxn" = jxnOut_list ,"tx" = txOut_list)
 
 
-save(Lithium_BPseqmodel , file = here("results", "Lithium results BPseqmodel.RDS"))
+save(
+  Lithium_BPseqmodel, 
+  file = paste0("../results/results_bbpseqmodel_de_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".rds")
+  )
 
 ## Reproducibility information
 Sys.time()

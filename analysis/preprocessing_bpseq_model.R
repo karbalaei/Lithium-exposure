@@ -1,3 +1,5 @@
+### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! 
+
 library(jaffelab)
 library(SummarizedExperiment)
 library(sva)
@@ -152,8 +154,8 @@ rse_tx_lithium = rse_tx_lithium[txIndex,]
 #####################
 ### SAVE OBJECTS ###
 ####################
-#save(rse_gene_lithium, file="./processed_data/rse_gene_lithium_bpseq_model.Rdata")
-#save(rse_exon_lithium, file="./processed_data/rse_exon_lithium_bpseq_model.Rdata")
-#save(rse_jxn_lithium, file="./processed_data/rse_jxn_lithium_bpseq_model.Rdata")
-#save(rse_tx_lithium, file="./processed_data/rse_tx_lithium_bpseq_model.Rdata")
-#save(qSV_mat_lithium, file="./processed_data/qSV_mat_lithium_bpseq_model.Rdata")
+save(rse_gene_lithium, file="../preprocessed_data/rse_gene_lithium_bpseq_model_processed_data.Rdata")
+save(rse_exon_lithium, file="../preprocessed_data/rse_exon_lithium_bpseq_model_processed_data.Rdata")
+save(rse_jxn_lithium, file="../preprocessed_data/rse_jxn_lithium_bpseq_model_processed_data.Rdata")
+save(rse_tx_lithium, file="../preprocessed_data/rse_tx_lithium_bpseq_model_processed_data.Rdata")
+save(qSV_mat_lithium, file="../preprocessed_data/qSV_mat_lithium_bpseq_model_processed_data.Rdata")

@@ -1,3 +1,5 @@
+### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! ###
+
 ### Library #####
 library(here)
 library("ggVennDiagram")
@@ -12,7 +14,7 @@ library(ggplot2)
 library(reshape2)
 
 
-load(file = here::here("results" ,"Lithium results BPseqmodel.RDS"))
+load("../results/Lithium results BPseqmodel.RDS")
 
 
 #### Functions for extracting gene sets ####

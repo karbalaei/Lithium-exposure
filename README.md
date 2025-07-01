@@ -4,7 +4,8 @@
 
 ![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/graphs/Flowchart.jpg)
 
-## Replication Steps:
+--- 
+## Analysis Replication Steps:
 
 ### 1. Preprocessing
 
@@ -44,6 +45,40 @@ save(rse_tx_lithium, file="../preprocessed_data/rse_tx_lithium_bpseq_model_proce
     ```
 
 ### 2. Differential expression analysis
+
+**File**: `./analysis/de_analysis/de_qsv_BPseq_model.R`
+
+**Inputs**:
+
+-   Preprocessed and filtered RSE gene, exon, junction, and transcript data
+
+    ``` R
+    load("../preprocessed_data/rse_gene_lithium_bpseq_model_processed_data.Rdata")
+    load("../preprocessed_data/rse_exon_lithium_bpseq_model_processed_data.Rdata")
+    load("../preprocessed_data/rse_jxn_lithium_bpseq_model_processed_data.Rdata")
+    load("../preprocessed_data/rse_tx_lithium_bpseq_model_processed_data.Rdata")
+    ```
+
+-   qSV matrix created from preprocessing
+
+    ``` R
+    load("../preprocessed_data/qSV_mat_lithium_bpseq_model_processed_data.Rdata")
+    ```
+
+**Outputs**:
+
+-   P values of features, separated by gene/exon/junction/transcript level and brain region. Dated by run time.
+
+    ``` R
+    save(
+      Lithium_BPseqmodel, 
+      file = paste0("../results/results_bbpseqmodel_de_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".rds")
+      )
+    ```
+---
+## Plotting Replication Steps:
+
+### 1. Differential expression plots
 
 **File**: `./analysis/de_analysis/de_qsv_BPseq_model.R`
 

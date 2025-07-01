@@ -329,12 +329,12 @@ gene_type_graph <- function() {
 
   
   
-  pdf(here::here("graphs" ,  "BPseq_model"  , "Barplot_gene_type.pdf") , width = 9 , height = 6)
+  pdf(here::here("graphs" ,  "BPseq_model", "bar_plots", "Barplot_gene_type.pdf") , width = 9 , height = 6)
   print(g)
   dev.off()
   
   # Save JPEG
-  jpeg(here::here("graphs" ,  "BPseq_model"  , "Barplot_gene_type.jpg") , width = 6000 , height = 4000 , res = 600)
+  jpeg(here::here("graphs" ,  "BPseq_model", "bar_plots", "Barplot_gene_type.jpg") , width = 6000 , height = 4000 , res = 600)
   print(g)
   dev.off()
   

@@ -1,3 +1,5 @@
+### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! ###
+
 ### Library #####
 library(here)
 library("ggVennDiagram")
@@ -11,8 +13,21 @@ library(tidyverse)
 library(ggplot2)
 library(reshape2)
 
+### Install venn if you haven't:
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
 
-load(file = here::here("results" ,"Lithium results BPseqmodel.RDS"))
+BiocManager::install("venn")
+BiocManager::install("VennDetail")
+
+# load in venn
+library(venn)
+library(VennDetail)
+
+## LOAD in differential expression results ##
+## CHANGE this file name to be the one you want to graph ##
+
+load("./results/results_bbpseqmodel_de_20250701_110208.rds")
 
 
 #### Functions for extracting gene sets ####
@@ -228,12 +243,12 @@ create_and_save_barplot <- function(plot_data, file_suffix , Title) {
     ylim(0 , 4000)
   
   # Save PDF
-  pdf(here::here("graphs", "BPseq_model", paste0(file_suffix, ".pdf")), width = 9, height = 6)
+  pdf(here::here("graphs", "BPseq_model", "bar_plots", paste0(file_suffix, ".pdf")), width = 9, height = 6)
   print(p)
   dev.off()
   
   # Save JPEG
-  jpeg(here::here("graphs", "BPseq_model", paste0(file_suffix, ".jpg")), width = 6000, height = 4000, res = 600)
+  jpeg(here::here("graphs", "BPseq_model", "bar_plots", paste0(file_suffix, ".jpg")), width = 6000, height = 4000, res = 600)
   print(p)
   dev.off()
 }

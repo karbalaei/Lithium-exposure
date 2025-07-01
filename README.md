@@ -4,7 +4,8 @@
 
 ![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/graphs/Flowchart.jpg)
 
---- 
+------------------------------------------------------------------------
+
 ## Analysis Replication Steps:
 
 ### 1. Preprocessing
@@ -52,7 +53,7 @@ save(rse_tx_lithium, file="../preprocessed_data/rse_tx_lithium_bpseq_model_proce
 
 -   Preprocessed and filtered RSE gene, exon, junction, and transcript data
 
-    ``` R
+    ``` r
     load("../preprocessed_data/rse_gene_lithium_bpseq_model_processed_data.Rdata")
     load("../preprocessed_data/rse_exon_lithium_bpseq_model_processed_data.Rdata")
     load("../preprocessed_data/rse_jxn_lithium_bpseq_model_processed_data.Rdata")
@@ -61,7 +62,7 @@ save(rse_tx_lithium, file="../preprocessed_data/rse_tx_lithium_bpseq_model_proce
 
 -   qSV matrix created from preprocessing
 
-    ``` R
+    ``` r
     load("../preprocessed_data/qSV_mat_lithium_bpseq_model_processed_data.Rdata")
     ```
 
@@ -69,43 +70,32 @@ save(rse_tx_lithium, file="../preprocessed_data/rse_tx_lithium_bpseq_model_proce
 
 -   P values of features, separated by gene/exon/junction/transcript level and brain region. Dated by run time.
 
-    ``` R
+    ``` r
     save(
       Lithium_BPseqmodel, 
       file = paste0("../results/results_bbpseqmodel_de_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".rds")
       )
     ```
----
+
+    ------------------------------------------------------------------------
+
 ## Plotting Replication Steps:
 
 ### 1. Differential expression plots
 
-**File**: `./analysis/de_analysis/de_qsv_BPseq_model.R`
+**File**: `./analysis/de_analysis/All_plots_code_BPseq_model.R`
 
 **Inputs**:
 
--   Preprocessed and filtered RSE gene, exon, junction, and transcript data
+-   Outputs from differential expression analysis (`./analysis/de_analysis/de_qsv_BPseq_model.R`)
 
-    ``` R
-    load("../preprocessed_data/rse_gene_lithium_bpseq_model_processed_data.Rdata")
-    load("../preprocessed_data/rse_exon_lithium_bpseq_model_processed_data.Rdata")
-    load("../preprocessed_data/rse_jxn_lithium_bpseq_model_processed_data.Rdata")
-    load("../preprocessed_data/rse_tx_lithium_bpseq_model_processed_data.Rdata")
-    ```
-
--   qSV matrix created from preprocessing
-
-    ``` R
-    load("../preprocessed_data/qSV_mat_lithium_bpseq_model_processed_data.Rdata")
+    ``` r
+    paste0("../results/results_bbpseqmodel_de_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".rds")
     ```
 
 **Outputs**:
 
--   P values of features, separated by gene/exon/junction/transcript level and brain region. Dated by run time.
+(Found in `/graphs/BPseq_model`)
 
-    ``` R
-    save(
-      Lithium_BPseqmodel, 
-      file = paste0("../results/results_bbpseqmodel_de_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".rds")
-      )
-    ```
+-   Venn diagrams of significant features and overlap at p\<0.005 significance level (both assigned features and all features)
+-   Bar plots of significant features at p\<0.005 significance level (both assigned and all)

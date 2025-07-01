@@ -1,3 +1,5 @@
+### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! ###
+
 ### Library #####
 library(SummarizedExperiment)
 library(jaffelab)
@@ -21,8 +23,7 @@ library(ggplot2)
 
 
 
-
-load(file = here("results" ,"Lithium results BPseqmodel.RDS"))
+load("./results/results_bbpseqmodel_de_20250701_110208.rds")
 
 map_depth(Lithium_BPseqmodel, 2, nrow)
 
@@ -73,9 +74,6 @@ get_signif <- function(outFeature, colname = "common_feature_id", cutoff = 0.005
   
   }
 }
-
-
-
 
 my_flatten <- function (x, use.names = TRUE, classes = "ANY") {
   #' Source taken from rlist::list.flatten
@@ -150,11 +148,14 @@ plan <- tidyr::expand_grid(
   ontology = ont
 )
 
-Enrichment_results <-  pmap(plan,  ~enrichGO(.x,
-                                                                       universe = u, OrgDb = org.Hs.eg.db,
-                                                                       ont = .y , pAdjustMethod = "BH",
-                                                                       pvalueCutoff  = .2, qvalueCutoff  = .5,
-                                                                       readable= TRUE)   )
+Enrichment_results <-  pmap(
+  plan,  ~enrichGO(
+                  .x, universe = u, OrgDb = org.Hs.eg.db,
+                  ont = .y , pAdjustMethod = "BH",
+                  pvalueCutoff  = .2, qvalueCutoff  = .5,
+                  readable= TRUE
+                  )
+  )
 
 names(Enrichment_results) <- c(paste0(names(Enrichment_results), "_", rep(ont)))
 
@@ -184,7 +185,7 @@ map2(Enrichment_results, names(Enrichment_results), ~dotplot(.x, title = .y , sh
 
 dev.off()
 
-save(Enrichment_results,file = here("results", "enrichGO_BPseq_model_whole_list.rda"))
+save(Enrichment_results,file = here("enrichGO_BPseq_model_whole_list.rda"))
 
 ### Up ###
 
@@ -258,7 +259,7 @@ map2(Enrichment_results_up, names(Enrichment_results_up), ~dotplot(.x, title = .
 
 dev.off()
 
-save(Enrichment_results_up,file = here("results", "enrichGO_BPseq_model_up.rda"))
+save(Enrichment_results_up,file = here("enrichGO_BPseq_model_up.rda"))
 
 
 ### down###
@@ -334,7 +335,7 @@ map2(Enrichment_results_down, names(Enrichment_results_down), ~dotplot(.x, title
 
 dev.off()
 
-save(Enrichment_results_down,file = here("results", "enrichGO_BPseq_model_down.rda"))
+save(Enrichment_results_down,file = here("enrichGO_BPseq_model_down.rda"))
 
 
 

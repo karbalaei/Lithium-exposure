@@ -126,8 +126,10 @@ rse_exon_lithium = rse_exon[,rownames(modSep_lithium)]
 rse_jxn_lithium = rse_jxn[,rownames(modSep_lithium)]
 rse_tx_lithium = rse_tx[,rownames(modSep_lithium)]
 
+###############################################################
+### Filtering data only on lithium samples ###
+###############################################################
 
-### Filtering data ####
 ##### Gene ######
 assays(rse_gene_lithium)$rpkm = recount::getRPKM(rse_gene_lithium, 'Length')
 geneIndex = rowMeans(assays(rse_gene_lithium)$rpkm) > 0.25  ## both regions

@@ -1,4 +1,4 @@
-### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! 
+### !!! README: RUN THIS FILE FROM THE Lithium-exposure/ DIRECTORY !!! ###
 
 library(jaffelab)
 library(SummarizedExperiment)

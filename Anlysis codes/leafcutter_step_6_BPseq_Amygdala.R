@@ -28,7 +28,11 @@ walk( clusters$clusterID , ~make_cluster_plot(cluster_to_plot = .x ,exons_table 
 
 message("creating graphs of genes")
 
-walk2( clusters$gene , clusters$clusterID , ~make_gene_plot(gene_name =  .x ,clusterID <- .y , cluster_list = clusters , introns = introns , introns_to_plot = introns_to_plot , exons_table = exons_table , snp_pos <-  NA , min_exon_length <- 0.5  , region = "Amygdala"))
+clusters_gene <- clusters %>% 
+  dplyr::filter(gene !=".")
+
+
+walk2( clusters_gene$gene , clusters_gene$clusterID , ~make_gene_plot(gene_name =  .x ,clusterID <- .y , cluster_list = clusters , introns = introns , introns_to_plot = introns_to_plot , exons_table = exons_table , snp_pos <-  NA , min_exon_length <- 0.5  , region = "Amygdala"))
 
 
 write.table(clusters, file = here("results" , "leafcutter" , paste0("BPseq_Amygdala" , "_sig_clusters.csv")) , sep = ",", 

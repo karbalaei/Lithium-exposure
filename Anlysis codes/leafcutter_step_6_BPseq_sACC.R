@@ -16,8 +16,7 @@ load(file = here("results" ,"Lithium results BPseqmodel.RDS"))
 DEGs <-   Lithium_BPseqmodel$gene$sACC %>% dplyr::filter(P.Value < 0.005) %>% pull(Symbol) %>% unique()
 
 clusters <- clusters %>% dplyr::mutate(gene = gsub("<i>|</i>", "", gene, fixed = FALSE)) %>% 
-  dplyr::mutate(DEGs = if_else(gene %in% DEGs , "yes" , "no")) %>%
-  dplyr::filter(gene !=".")
+  dplyr::mutate(DEGs = if_else(gene %in% DEGs , "yes" , "no"))
 
 
 message("creating tables of clusters")
@@ -30,7 +29,11 @@ walk( clusters$clusterID , ~make_cluster_plot(cluster_to_plot = .x ,exons_table 
 
 message("creating graphs of genes")
 
-walk2( clusters$gene , clusters$clusterID , ~make_gene_plot(gene_name =  .x ,clusterID <- .y , cluster_list = clusters , introns = introns , introns_to_plot = introns_to_plot , exons_table = exons_table , snp_pos <-  NA , min_exon_length <- 0.5  , region = "sACC"))
+clusters_gene <- clusters %>% 
+  dplyr::filter(gene !=".")
+
+walk2( clusters_gene$gene , clusters_gene$clusterID , ~make_gene_plot(gene_name =  .x ,clusterID <- .y , cluster_list = clusters , introns = introns , introns_to_plot = introns_to_plot , exons_table = exons_table , snp_pos <-  NA , min_exon_length <- 0.5  , region = "sACC"))
+
 
 
 write.table(clusters, file = here("results" , "leafcutter" , paste0("BPseq_sACC" , "_sig_clusters.csv")) , sep = ",", 

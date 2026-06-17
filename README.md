@@ -5,16 +5,23 @@ Comparing BD patients with lithium exposure against non-exposed BD patients is c
 
 ## 1. Isolating Medication Effects from Disease Pathology
 
-Bipolar disorder is fundamentally characterized by progressive neuroanatomical changes, including structural brain abnormalities and progressive gray matter volume loss in areas key to executive control and emotion regulation (Bergamelli et al., 2021; Carmassi et al., 2016). By constructing a comparative cohort (exposed vs. non-exposed), researchers can effectively differentiate between:
+Bipolar disorder is fundamentally characterized by progressive neuroanatomical changes, including structural brain abnormalities and progressive gray matter volume loss in areas key to executive control and emotion regulation [[2 , 3](#references)]. By constructing a comparative cohort (exposed vs. non-exposed), researchers can effectively differentiate between:
 
 - The natural progression of the illness (neuroprogression and pathological atrophy).
 
 - The structural modifications directly induced by treatment (pharmacological intervention).
 ## 2. Validating Neuroprotective and Neurotrophic Hypotheses
 
-Emerging neuroimaging and molecular data suggest that lithium is not merely a symptom suppressor, but a potent neuroprotective agent. This comparative framework allows us to evaluate key downstream cellular hypotheses:  Biological MechanismHypothesized Impact of LithiumComparison Expectation (Exposed vs. Non-Exposed)Neurogenesis & PlasticityUpregulates BDNF (Brain-Derived Neurotrophic Factor) and Bcl-2.Exposed patients are expected to show preserved or increased gray matter volumes in the hippocampus and amygdala.Enzyme InhibitionInhibits Glycogen Synthase Kinase-3 ($\text{GSK-3}\beta$).Exposed patients should exhibit reduced neuroinflammation and decreased cellular apoptosis compared to non-exposed peers.Neurotransmission ModulationBalances excitatory (glutamate) and inhibitory (GABA) pathways.Exposed patients typically display normalized functional connectivity in frontolimbic networks during resting-state fMRI.
+A growing body of preclinical and in vivo translational data suggests that lithium acts as a potent neuroprotective agent rather than a mere symptom suppressor [[3 , 5](#references)]. This comparative framework allows for the empirical evaluation of several core downstream cellular hypotheses:
+
+| Biological Mechanism | Hypothesized Impact of Lithium | Comparison Expectation (Exposed vs. Non-Exposed) |
+| :--- | :--- | :--- |
+| **Neurogenesis & Plasticity** | Upregulates Brain-Derived Neurotrophic Factor (BDNF) and anti-apoptotic proteins like Bcl-2 | **Exposed patients** exhibit greater gray matter volumes in critical emotion processing networks, including the hippocampus, amygdala, and anterior cingulate cortex |
+| **Enzyme Inhibition** | Competitively inhibits Glycogen Synthase Kinase-3 ($\text{GSK-3}\beta$) and blocks NMDA receptor-mediated calcium influx | **Exposed patients ** are expected to show reduced neuroinflammation, normalized cellular microstructural organization, and preserved prefrontal neurite density |
+| **Neurotransmission Modulation** | Stabilizes neurotransmission by downregulating excitatory glutamate and promoting inhibitory GABA levels | **Exposed patients ** demonstrate a distinct "normalization" of functional connectivity in key frontolimbic emotional regulation networks during fMRI tasks |
 
 ## 3. Addressing the "Lithium Paradox" in Clinical Practice
+
 
 Despite its efficacy, a significant subset of BD patients do not respond to lithium, or discontinue its use due to narrow therapeutic windows and systemic side effects. Evaluating data through an exposure-based lens helps researchers identify potential baseline biomarkers (structural or genetic) that separate responders from non-responders, paving the way for personalized psychiatric medicine.
 

@@ -1,16 +1,17 @@
 # The Neurobiological Impact of Lithium in Bipolar Disorder
 
+## Introduction:
 Lithium remains the definitive gold-standard maintenance therapy for Bipolar Disorder (BD), demonstrating unparalleled efficacy across different stages of the disorder by preventing recurrent mood episodes and significantly reducing suicide risk [[1 , 2](#references)]. However, its exact mechanism of action on the human brain remains an active area of neuroscientific inquiry.
 Comparing BD patients with lithium exposure against non-exposed BD patients is clinically and scientifically crucial for several reasons:
 
-## 1. Isolating Medication Effects from Disease Pathology
+### 1. Isolating Medication Effects from Disease Pathology
 
 Bipolar disorder is fundamentally characterized by progressive neuroanatomical changes, including structural brain abnormalities and progressive gray matter volume loss in areas key to executive control and emotion regulation [[2 , 3](#references)]. By constructing a comparative cohort (exposed vs. non-exposed), researchers can effectively differentiate between:
 
 - The natural progression of the illness (neuroprogression and pathological atrophy).
 
 - The structural modifications directly induced by treatment (pharmacological intervention).
-## 2. Validating Neuroprotective and Neurotrophic Hypotheses
+### 2. Validating Neuroprotective and Neurotrophic Hypotheses
 
 A growing body of preclinical and in vivo translational data suggests that lithium acts as a potent neuroprotective agent rather than a mere symptom suppressor [[3 , 5](#references)]. This comparative framework allows for the empirical evaluation of several core downstream cellular hypotheses:
 
@@ -20,11 +21,14 @@ A growing body of preclinical and in vivo translational data suggests that lithi
 | **Enzyme Inhibition** | Competitively inhibits Glycogen Synthase Kinase-3 (**$\text{GSK-3}\beta$**) and blocks NMDA receptor-mediated calcium influx [[4 , 8](#references)] | **Exposed patients** are expected to show reduced neuroinflammation, normalized cellular microstructural organization, and preserved prefrontal neurite density [[4 , 7](#references)]|
 | **Neurotransmission Modulation** | Stabilizes neurotransmission by downregulating excitatory glutamate and promoting inhibitory GABA levels [[2](#references)]| **Exposed patients** demonstrate a distinct "normalization" of functional connectivity in key frontolimbic emotional regulation networks during fMRI tasks [[2](#references)]|
 
-## 3. Addressing the "Lithium Paradox" in Clinical Practice
-
+### 3. Addressing the "Lithium Paradox" in Clinical Practice
 
 Despite its efficacy, a significant subset of BD patients do not respond to lithium, or discontinue its use due to narrow therapeutic windows and systemic side effects. Evaluating data through an exposure-based lens helps researchers identify potential baseline biomarkers (structural or genetic) that separate responders from non-responders, paving the way for personalized psychiatric medicine.
 
+## Methods and analysis :
+
+To elucidate the region-specific molecular profiles associated with this cohort, differential expression analyses were conducted on postmortem tissue specimens across two anatomically distinct brain regions: the amygdala and the subgenual anterior cingulate cortex (sACC).
+  
 ![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/graphs/Flowchart.jpg) 
 
 

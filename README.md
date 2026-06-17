@@ -16,9 +16,9 @@ A growing body of preclinical and in vivo translational data suggests that lithi
 
 | Biological Mechanism | Hypothesized Impact of Lithium | Comparison Expectation (Exposed vs. Non-Exposed) |
 | :--- | :--- | :--- |
-| **Neurogenesis & Plasticity** | Upregulates Brain-Derived Neurotrophic Factor (BDNF) and anti-apoptotic proteins like Bcl-2 | **Exposed patients** exhibit greater gray matter volumes in critical emotion processing networks, including the hippocampus, amygdala, and anterior cingulate cortex |
-| **Enzyme Inhibition** | Competitively inhibits Glycogen Synthase Kinase-3 ($\text{GSK-3}\beta$) and blocks NMDA receptor-mediated calcium influx | **Exposed patients ** are expected to show reduced neuroinflammation, normalized cellular microstructural organization, and preserved prefrontal neurite density |
-| **Neurotransmission Modulation** | Stabilizes neurotransmission by downregulating excitatory glutamate and promoting inhibitory GABA levels | **Exposed patients ** demonstrate a distinct "normalization" of functional connectivity in key frontolimbic emotional regulation networks during fMRI tasks |
+| **Neurogenesis & Plasticity** | Upregulates Brain-Derived Neurotrophic Factor (BDNF) and anti-apoptotic proteins like Bcl-2 [[3 , 5](#references)] | **Exposed patients** exhibit greater gray matter volumes in critical emotion processing networks, including the hippocampus, amygdala, and anterior cingulate cortex [[1 , 6](#references)]|
+| **Enzyme Inhibition** | Competitively inhibits Glycogen Synthase Kinase-3 ($\text{GSK-3}\beta$) and blocks NMDA receptor-mediated calcium influx [[4 , 8](#references)] | ** Exposed patients ** are expected to show reduced neuroinflammation, normalized cellular microstructural organization, and preserved prefrontal neurite density [[4 , 7](#references)]|
+| **Neurotransmission Modulation** | Stabilizes neurotransmission by downregulating excitatory glutamate and promoting inhibitory GABA levels [[2](#references)]| ** Exposed patients ** demonstrate a distinct "normalization" of functional connectivity in key frontolimbic emotional regulation networks during fMRI tasks [[2](#references)]|
 
 ## 3. Addressing the "Lithium Paradox" in Clinical Practice
 

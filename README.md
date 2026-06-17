@@ -10,6 +10,6 @@ Comparing BD patients with lithium exposure against non-exposed BD patients is c
 
 ## References
 1. Bergamelli, E., Del Fabro, L., Delvecchio, G., D’Agostino, A. and Brambilla, P., 2021. The impact of lithium on brain function in bipolar disorder: an updated review of functional magnetic resonance imaging studies. CNS drugs, 35(12), pp.1275-1287.
-2.Sakrajda, K. and Rybakowski, J.K., 2025. The mechanisms of lithium action: the old and new findings. Pharmaceuticals, 18(4), p.467.
+2. Sakrajda, K. and Rybakowski, J.K., 2025. The mechanisms of lithium action: the old and new findings. Pharmaceuticals, 18(4), p.467.
 
 

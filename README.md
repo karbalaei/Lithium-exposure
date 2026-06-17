@@ -1,12 +1,15 @@
 # The Neurobiological Impact of Lithium in Bipolar Disorder
 
-Lithium remains the definitive first-line maintenance therapy for Bipolar Disorder (BD), demonstrating unparalleled efficacy in preventing mood relapses and reducing suicide risk. However, its exact mechanisms of action on the human brain remain an active area of neuroscientific inquiry.[[1 , 2](#references)]
+Lithium remains the definitive gold-standard maintenance therapy for Bipolar Disorder (BD), demonstrating unparalleled efficacy across different stages of the disorder by preventing recurrent mood episodes and significantly reducing suicide risk [[1 , 2](#references)]. However, its exact mechanism of action on the human brain remains an active area of neuroscientific inquiry.
 Comparing BD patients with lithium exposure against non-exposed BD patients is clinically and scientifically crucial for several reasons:
 
 ## 1. Isolating Medication Effects from Disease Pathology
 
-Bipolar disorder is fundamentally characterized by progressive neuroanatomical changes, including gray matter volume loss in regions responsible for emotion regulation and executive function. By comparing exposed vs. non-exposed patients, we can differentiate between:The natural progression of the illness (neuroprogression).  The structural modifications directly induced by the treatment (pharmacological intervention).
+Bipolar disorder is fundamentally characterized by progressive neuroanatomical changes, including structural brain abnormalities and progressive gray matter volume loss in areas key to executive control and emotion regulation (Bergamelli et al., 2021; Carmassi et al., 2016). By constructing a comparative cohort (exposed vs. non-exposed), researchers can effectively differentiate between:
 
+- The natural progression of the illness (neuroprogression and pathological atrophy).
+
+- The structural modifications directly induced by treatment (pharmacological intervention).
 ## 2. Validating Neuroprotective and Neurotrophic Hypotheses
 
 Emerging neuroimaging and molecular data suggest that lithium is not merely a symptom suppressor, but a potent neuroprotective agent. This comparative framework allows us to evaluate key downstream cellular hypotheses:  Biological MechanismHypothesized Impact of LithiumComparison Expectation (Exposed vs. Non-Exposed)Neurogenesis & PlasticityUpregulates BDNF (Brain-Derived Neurotrophic Factor) and Bcl-2.Exposed patients are expected to show preserved or increased gray matter volumes in the hippocampus and amygdala.Enzyme InhibitionInhibits Glycogen Synthase Kinase-3 ($\text{GSK-3}\beta$).Exposed patients should exhibit reduced neuroinflammation and decreased cellular apoptosis compared to non-exposed peers.Neurotransmission ModulationBalances excitatory (glutamate) and inhibitory (GABA) pathways.Exposed patients typically display normalized functional connectivity in frontolimbic networks during resting-state fMRI.

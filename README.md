@@ -19,7 +19,19 @@ Despite its efficacy, a significant subset of BD patients do not respond to lith
 
 
 ## References
-1. Bergamelli, E., Del Fabro, L., Delvecchio, G., D’Agostino, A. and Brambilla, P., 2021. The impact of lithium on brain function in bipolar disorder: an updated review of functional magnetic resonance imaging studies. CNS drugs, 35(12), pp.1275-1287.
-2. Sakrajda, K. and Rybakowski, J.K., 2025. The mechanisms of lithium action: the old and new findings. Pharmaceuticals, 18(4), p.467.
-3. Ochoa, E.L., 2022. Lithium as a neuroprotective agent for bipolar disorder: an overview. Cellular and molecular neurobiology, 42(1), pp.85-97.
+1.	Bearden, C. E., Thompson, P. M., Dalwani, M., Hayashi, Kiralee M., Lee, Agatha D., Nicoletti, M., Trakhtenbroit, M., Glahn, David C., Brambilla, P., Sassi, Roberto B., Mallinger, Alan G., Frank, E., Kupfer, David J., & Soares, Jair C. (2007). Greater Cortical Gray Matter Density in Lithium-Treated Patients with Bipolar Disorder. Biological Psychiatry, 62(1), 7-16. https://doi.org/10.1016/j.biopsych.2006.10.027 
+
+2.	Bergamelli, E., Del Fabro, L., Delvecchio, G., D’Agostino, A., & Brambilla, P. (2021). The Impact of Lithium on Brain Function in Bipolar Disorder: An Updated Review of Functional Magnetic Resonance Imaging Studies. CNS Drugs, 35(12), 1275-1287. https://doi.org/10.1007/s40263-021-00869-y 
+
+3.	Carmassi, C., Del Grande, C., Gesi, C., Musetti, L., & Dell'Osso, L. (2016). A new look at an old drug: neuroprotective effects and therapeutic potentials of lithium salts. Neuropsychiatric Disease and Treatment, 12, 1687-1703. https://doi.org/10.2147/ndt.s106479 
+
+4.	Chuang, D.-M., Wang, Z., & Chiu, C.-T. (2011). GSK-3 as a Target for Lithium-Induced Neuroprotection Against Excitotoxicity in Neuronal Cultures and Animal Models of Ischemic Stroke. Frontiers in Molecular Neuroscience, 4, Article 15. https://doi.org/10.3389/fnmol.2011.00015 
+
+5.	Diniz, B., Machado-Vieira, R., & Forlenza. (2013). Lithium and neuroprotection: translational evidence and implications for the treatment of neuropsychiatric disorders. Neuropsychiatric Disease and Treatment, 493. https://doi.org/10.2147/ndt.s33086 
+
+6.	Hozer, F., Sarrazin, S., Laidi, C., Favre, P., Pauling, M., Cannon, D., McDonald, C., Emsell, L., Mangin, J.-F., Duchesnay, E., Bellani, M., Brambilla, P., Wessa, M., Linke, J., Polosan, M., Versace, A., Phillips, Mary L., Delavest, M., Bellivier, F., ... Houenou, J. (2020). Lithium prevents grey matter atrophy in patients with bipolar disorder: an international multicenter study. Psychological Medicine, 51(7), 1201-1210. https://doi.org/10.1017/s0033291719004112 
+
+7.	Sarrazin, S., Poupon, C., Teillac, A., Mangin, J.-F., Polosan, M., Favre, P., Laidi, C., D'Albis, M.-A., Leboyer, M., Lledo, P.-M., Henry, C., & Houenou, J. (2019). Higher in vivo Cortical Intracellular Volume Fraction Associated with Lithium Therapy in Bipolar Disorder: A Multicenter NODDI Study. Psychotherapy and Psychosomatics, 88(3), 171-176. https://doi.org/10.1159/000498854 
+
+8.	Snitow, M. E., Bhansali, R. S., & Klein, P. S. (2021). Lithium and Therapeutic Targeting of GSK-3. Cells, 10(2), 255. https://doi.org/10.3390/cells10020255 
 

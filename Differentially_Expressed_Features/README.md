@@ -6,7 +6,7 @@ After loading preprocessed data,  low expressed featured were removed from the a
 
 The comparison was done by applying few functions which more important ones and their application are as follow:
 
-calcNormFactors(): Calculates scaling factors to normalize for differences in library sizes between samples.
+[calcNormFactors](https://www.rdocumentation.org/packages/edgeR/versions/3.14.0/topics/calcNormFactors): Calculates scaling factors to normalize for differences in library sizes between samples.
 
 voom(): Converts raw RNA-seq counts to log-CPM values and estimates precision weights to handle the mean-variance relationship.
 

@@ -1,0 +1,3 @@
+# Differentially expressed features
+
+To elucidate region-specific molecular profiles within this cohort, we conducted transcriptomic differential expression analyses on postmortem tissue specimens from individuals with Bipolar Disorder, stratified by documented lithium exposure. Analyses were performed across two anatomically distinct brain regions crucial to emotional regulation: the amygdala and the subgenual anterior cingulate cortex (sACC). 

@@ -8,6 +8,6 @@ The comparison was done by applying few functions which more important ones and 
 
 [calcNormFactors](https://www.rdocumentation.org/packages/edgeR/versions/3.14.0/topics/calcNormFactors): Calculates scaling factors to normalize for differences in library sizes between samples.
 
-voom(): Converts raw RNA-seq counts to log-CPM values and estimates precision weights to handle the mean-variance relationship.
+[voom](https://rdrr.io/bioc/limma/man/voom.html): Converts raw RNA-seq counts to log-CPM values and estimates precision weights to handle the mean-variance relationship.
 
-lmFit(): Fits a linear model to the expression data for each gene/exon to prepare for differential expression testing.
+[lmFit](https://www.rdocumentation.org/packages/limma/versions/3.28.14/topics/lmFit): Fits a linear model to the expression data for each gene/exon to prepare for differential expression testing.

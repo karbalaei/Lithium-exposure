@@ -28,11 +28,11 @@ Despite its efficacy, a significant subset of BD patients do not respond to lith
 ## Methods and analysis :
 
 To elucidate region-specific molecular profiles within this cohort, we conducted transcriptomic differential expression analyses on postmortem tissue specimens from individuals with Bipolar Disorder, stratified by documented lithium exposure. Analyses were performed across two anatomically distinct brain regions crucial to emotional regulation: the amygdala and the subgenual anterior cingulate cortex (sACC).  
-![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/graphs/Flowchart.jpg) 
+![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/assets/Flowchart.jpg) 
 
 Here are the list of analyses :
 
-![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/.git/Flowchart.jpg) 
+![Flowchart](assets/Flowchart.jpg) 
 
 1. Diferentillay expressed feature ( Gene , Exon, Junction and Transcript ), using vimma::loom and and lmFit functions in R ( please see the details here)
 

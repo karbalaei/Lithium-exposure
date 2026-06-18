@@ -35,7 +35,7 @@ Here are the list of analyses :
 
 1. Diferentillay expressed feature ( Gene , Exon, Junction and Transcript ), using vimma::loom and and lmFit functions in R ( please see the details here)
 
-2. Detect Alternative splicing events using Leafcutter (please see the details here)
+2. Detect Alternative splicing events using Leafcutter (please see the details [here](Differentially_Expressed_Features/)) 
 
 3. Gene-set enrichment using enrichGO function in R (please see the details here)
 

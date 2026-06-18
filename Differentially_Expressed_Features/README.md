@@ -4,7 +4,7 @@ To elucidate region-specific molecular profiles within this cohort, we conducted
 
 ## Methodological Workflow
 
-Following the retrieval of preprocessed count data, lowly expressed features were filtered out to improve statistical power. A design matrix was then constructed using the `model.matrix()` function, incorporating quality surrogate variables (qSVs) derived from previous benchmarks to rigorously control for unobserved technical covariates and batch effects.
+Following the retrieval of preprocessed count data, lowly expressed features were filtered out to improve statistical power. A design matrix was then constructed using the `model.matrix()` function, incorporating quality surrogate variables [(qSVs)](https://www.pnas.org/doi/abs/10.1073/pnas.1617384114) derived from previous benchmarks to rigorously control for unobserved technical covariates and batch effects.
 
 The differential expression pipeline was executed using the standard `edgeR`/`limma` framework, leveraging the following core functions:
 

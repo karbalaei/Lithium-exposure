@@ -33,9 +33,17 @@ To elucidate region-specific molecular profiles within this cohort, we conducted
 Here are the list of analyses :
 
 1. Diferentillay expressed feature ( Gene , Exon, Junction and Transcript ), using vimma::loom and and lmFit functions in R ( please see the details here)
+
 2. Detect Alternative splicing events using Leafcutter (please see the details here)
+
 3. Gene-set enrichment using enrichGO function in R (please see the details here)
-4. Prepare appropraite ready for publsish graphs and tables 
+
+4. Run WGCNA and do some Downstream analysis on its results ( please see the details here) 
+
+5. Compare the results of differentially expressed genes with the results from similar studies ( Still ongoing)
+
+6. Prepare appropraite ready for publsish graphs and tables ( please see the details here)
+
 ## References
 1.	Bearden, C. E., Thompson, P. M., Dalwani, M., Hayashi, Kiralee M., Lee, Agatha D., Nicoletti, M., Trakhtenbroit, M., Glahn, David C., Brambilla, P., Sassi, Roberto B., Mallinger, Alan G., Frank, E., Kupfer, David J., & Soares, Jair C. (2007). Greater Cortical Gray Matter Density in Lithium-Treated Patients with Bipolar Disorder. Biological Psychiatry, 62(1), 7-16. https://doi.org/10.1016/j.biopsych.2006.10.027 
 

@@ -32,6 +32,8 @@ To elucidate region-specific molecular profiles within this cohort, we conducted
 
 Here are the list of analyses :
 
+![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/.git/Flowchart.jpg) 
+
 1. Diferentillay expressed feature ( Gene , Exon, Junction and Transcript ), using vimma::loom and and lmFit functions in R ( please see the details here)
 
 2. Detect Alternative splicing events using Leafcutter (please see the details here)

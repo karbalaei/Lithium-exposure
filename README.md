@@ -27,11 +27,15 @@ Despite its efficacy, a significant subset of BD patients do not respond to lith
 
 ## Methods and analysis :
 
-To elucidate the region-specific molecular profiles associated with this cohort, differential expression analyses were conducted on postmortem tissue specimens across two anatomically distinct brain regions: the amygdala and the subgenual anterior cingulate cortex (sACC).
-  
+To elucidate region-specific molecular profiles within this cohort, we conducted transcriptomic differential expression analyses on postmortem tissue specimens from individuals with Bipolar Disorder, stratified by documented lithium exposure. Analyses were performed across two anatomically distinct brain regions crucial to emotional regulation: the amygdala and the subgenual anterior cingulate cortex (sACC).  
 ![Flowchart](https://github.com/karbalaei/Lithium-exposure/blob/main/graphs/Flowchart.jpg) 
 
+Here are the list of analyses :
 
+1. Diferentillay expressed feature ( Gene , Exon, Junction and Transcript ), using vimma::loom and and lmFit functions in R ( please see the details here)
+2. Detect Alternative splicing events using Leafcutter (please see the details here)
+3. Gene-set enrichment using enrichGO function in R (please see the details here)
+4. Prepare appropraite ready for publsish graphs and tables 
 ## References
 1.	Bearden, C. E., Thompson, P. M., Dalwani, M., Hayashi, Kiralee M., Lee, Agatha D., Nicoletti, M., Trakhtenbroit, M., Glahn, David C., Brambilla, P., Sassi, Roberto B., Mallinger, Alan G., Frank, E., Kupfer, David J., & Soares, Jair C. (2007). Greater Cortical Gray Matter Density in Lithium-Treated Patients with Bipolar Disorder. Biological Psychiatry, 62(1), 7-16. https://doi.org/10.1016/j.biopsych.2006.10.027 
 
